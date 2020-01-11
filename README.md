@@ -1,3 +1,2 @@
-# ml_modelagem
-Curso de Verão 2020/1 UFRGS
-Machine Learning e Modelagem Estatística
+# Machine Learning e Modelagem Estatística
+UFRGS - Curso de Verão 2020/1
