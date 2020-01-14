@@ -96,8 +96,6 @@ for (i in seq(1:100)){
 
 # Graficos #
 
-install.packages("ggplot2")
-library(ggplot2)
 
 # b0 reg
 boxplot(bhat_params$b0_reg)
@@ -133,6 +131,7 @@ summary(MAE_table$MAEout_l1)
 
 # Grafico de dispersao # 
 plot(data$X, data$Y)
+
 
 # Tabela medias #
 

@@ -1,5 +1,5 @@
 ---
-title: "Tarefa 1 - Relatorio"
+title: "Tarefa 1 - Estimação de modelo preditivo com regressão linear"
 author: "Tais Bellini"
 date: "1/12/2020"
 output: word_document
@@ -11,44 +11,274 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Introdução
 
-Neste relatório, temos uma amostra de 100 empregados de uma determinada empresa que contém o salário anual (em milhares de reais), denotado pela variável *Y*, e tempo de serviço em anos, denotado pela veriável *X*.  Iremos aplicar dois métodos para estimar um modelo de predição de salário baseado no tempo de serviço: regressão linear simples utilizando MQO e minimização da perda L1.
+Neste relatório, iremos aplicar dois métodos para estimar um modelo de predição de salário baseado no tempo de serviço: regressão linear simples utilizando MQO e regressão linear simples minimizando a perda L1. Para realizar este estudo, usaremos uma amostra de 100 empregados de uma determinada empresa que contém o salário anual (em milhares de reais), denotado pela variável **Y**, e tempo de serviço em anos, denotado pela variável **X**. 
 
-** os dados foram gerados a partir de uma distribuicao normal por isso fica parecido
 
 ## Dados
 
 Primeiramente, vamos observar o gráfico de dispersão dos dados:
+
 
 ```{r dispersao, echo=FALSE}
 data = read.csv2("205650.txt", sep=" ", dec = ".")
 plot(data$X, data$Y, xlab = "anos de serviço", ylab="salário anual (em milhares)", main="Gráfico de dispersão")
 ```
 
-Observa-se que há uma relação linear positiva entre os dados e que o salário aumenta a medida que aumentam-se os anos de serviço.
+Observa-se que há uma relação linear positiva entre os dados e que o salário aumenta a medida que aumentam-se os anos de serviço. Portanto, consideramos apropriado utilizar a regressão linear.
 
 ## Estimação do modelo
 
-Para a estimação do modelo que faça a predição do salário baseado no tempo de serviço, utilizamos dois métodos: regressão linear minimizando o erro quadrático (MQO) e regressão linear minimizando o erro absoluto. O experimento realizado consistiu em: (i) dividir aleatoriamente a amostra em dois subconjuntos: treinamento (85% da amostra) e teste (15% da amostra); (ii) encontrar os coeficientes b0 e b1 que melhor ajustem a reta aos dados utilizando o MQO
+Para a estimação do modelo que faça a predição do salário baseado no tempo de serviço, utilizamos dois métodos: regressão linear minimizando o erro quadrático (MQO) e regressão linear minimizando o erro absoluto. 
 
+O experimento realizado consistiu em: 
 
+*(i)* dividir aleatoriamente a amostra em dois subconjuntos: treinamento (85% da amostra) e teste (15% da amostra); *(ii)* encontrar os coeficientes b0 e b1 que melhor ajustam a reta aos dados utilizando o MQO; *(iii)* calcular o erro absoluto médio do método MQO no subconjunto de treinamento (denotado por **MAEin**) e erro absoluto médio do método MQO no subconjunto de teste (denotado por **MAEout**); *(iv)* encontrar os coeficientes **b0** e **b1** que melhor ajustam a reta aos dados minimizando a perda L1; *(v)* calcular o **MAEin** e **MAEout** do método de minimização da perda L1 no subconjunto de teste (denotado por **MAEout**);
 
+Executando uma única vez o experimento, obtivemos os seguintes resultados:
 
+```{r funcoes auxiliares, echo=FALSE}
+# Funcao para dividir dados aleatoriamente em treinamento e teste #
+split_data = function(data, train_perc){
+  train_size <- floor(train_perc * nrow(data))
+  train_index <- sample(seq_len(nrow(data)), size = train_size)
+  train <- data[train_index, ]
+  test <- data[-train_index, ]
+  return(list("train" = train,
+              "test" = test))
+}
 
+# Funcao para encontrar params que minimizam perda L1 #
+opt_l1_loss = function(dataset){
+  l1_loss = function(y, f) {
+    sum(abs(y - f))
+  }
+  
+  fn = function(params){
+    b0 = params[1]
+    b1 = params[2]
+    l1_loss(y = dataset$Y, f = (b0 + b1 * dataset$X))
+  }
+  
+  opt_b = optim(
+    par = c(b0 = 0, b1=0),
+    fn = fn
+  )
+  
+  return(opt_b$par)
+}
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# Objetos para salvar os resultados das 100 repeticoes #
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+bhat_vec = rep(0,100)
+bhat_params = data.frame(b0_reg=bhat_vec,
+                         b1_reg=bhat_vec,
+                         b0_l1=bhat_vec,
+                         b1_l1=bhat_vec)
 
-```{r cars}
-summary(cars)
+MAE_vec = rep(0, 100)
+MAE_table = data.frame(MAEin_reg=MAE_vec,
+                       MAEout_reg=MAE_vec,
+                       MAEin_l1=MAE_vec,
+                       MAEout_l1=MAE_vec)
+
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+```{r regressao, echo=FALSE}
+set.seed(205650)  
+splitted_data = split_data(data, 0.85)
+  train <- splitted_data$train
+  test <- splitted_data$test
+  
+  ## Regressao simples (MQO) ##
+  
+  # Encontrar params b0 e b1 #
+  reg = lm(Y ~ X, data=train)
+  
+  ## Minimizar perda L1 ##
+  
+  # Encontrar b0 e b1 otimos #
+  opt_l1_loss_params = opt_l1_loss(train)
+  Ypred_test_l1 = opt_l1_loss_params[1] + opt_l1_loss_params[2]*test$X
+  Ypred_train_l1 = opt_l1_loss_params[1] + opt_l1_loss_params[2]*train$X
+  
+  # Calcular MAEout e MAEin #
+  Ypred_reg_test = predict(reg, test)
+  Ypred_reg_train = predict(reg, train)
+  
+  abs_error_test_reg = abs(test$Y - Ypred_reg_test)
+  MAEout_reg = sum(abs_error_test_reg)/15
+  
+  abs_error_train_reg = abs(train$Y - Ypred_reg_train)
+  MAEin_reg = sum(abs_error_train_reg)/85
+  
+  # Calcular MAEin e MAEout #
+  abs_error_test_l1 = abs(test$Y - Ypred_test_l1)
+  MAEout_l1 = sum(abs_error_test_l1)/15
+  
+  abs_error_train_l1 = abs(train$Y - Ypred_train_l1)
+  MAEin_l1 = sum(abs_error_train_l1)/85
 
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+### Resultados para uma repetição
+
+
+**Método** | **Coeficiente b0** | **Coeficiente b1** | **MAEin** | **MAEout**
+------- | ----------------  |---------------- |------- |-------
+Regressão | `r reg$coefficients[1]` | `r reg$coefficients[2]` | `r MAEin_reg` | `r MAEout_reg`
+Min Perda L1 | `r opt_l1_loss_params[1]` | `r opt_l1_loss_params[2]` | `r MAEin_l1` | `r MAEout_l1`
+
+
+
+```{r plot reta ajustada, echo=FALSE}
+
+plot(data$X, data$Y, xlab = "anos de serviço", ylab="salário anual (em milhares)", main="Reta ajustada MQO")
+lines(data$X, (reg$coefficients[1] + reg$coefficients[2]*data$X))
+
+plot(data$X, data$Y, xlab = "anos de serviço", ylab="salário anual (em milhares)", main="Reta ajustada min perda L1")
+lines(data$X, (opt_l1_loss_params[1] + opt_l1_loss_params[2]*data$X))
+      
+```
+
+
+Observa-se que os valores ficaram muito próximos, não havendo diferença significativa entre os resultados dos dois métodos. 
+
+
+Ao observarmos os dados, vemos que a distribuição de salário se aproxima de uma distribuição normal: 
+
+```{r}
+hist(data$Y, xlab= "salário", ylab="Frequência", main= "Histograma da variável salário")
+```
+
+Sabemos que o método MQO minimiza o ... 
+
+### Resultados para 100 repetições
+
+Em seguida, executamos os passos *(i)* ao *(v)* 100 vezes e computamos a média dos coeficientes *b0* e *b1*, do *MAEin* e do *MAEout* calculados em cada repetição. 
+
+```{r loop, echo=FALSE}
+# Loop para executar o experimento 100 vezes #
+
+set.seed(205650)
+for (i in seq(1:100)){
+  splitted_data = split_data(data, 0.85)
+  train <- splitted_data$train
+  test <- splitted_data$test
+  
+  ## Regressao simples (MQO) ##
+  
+  # Encontrar params b0 e b1 #
+  reg = lm(Y ~ X, data=train)
+  bhat_params$b0_reg[i] = reg$coefficients[1]
+  bhat_params$b1_reg[i] = reg$coefficients[2]
+  
+  # Calcular MAEout e MAEin #
+  Ypred_reg_test = predict(reg, test)
+  Ypred_reg_train = predict(reg, train)
+  
+  abs_error_test_reg = abs(test$Y - Ypred_reg_test)
+  MAEout_reg = sum(abs_error_test_reg)/15
+  MAE_table$MAEout_reg[i] = MAEout_reg
+  
+  abs_error_train_reg = abs(train$Y - Ypred_reg_train)
+  MAEin_reg = sum(abs_error_train_reg)/85
+  MAE_table$MAEin_reg[i] = MAEin_reg
+  
+  ## Minimizar perda L1 ##
+  
+  # Encontrar b0 e b1 otimos #
+  opt_l1_loss_params = opt_l1_loss(train)
+  Ypred_test_l1 = opt_l1_loss_params[1] + opt_l1_loss_params[2]*test$X
+  Ypred_train_l1 = opt_l1_loss_params[1] + opt_l1_loss_params[2]*train$X
+  bhat_params$b0_l1[i] = opt_l1_loss_params[1]
+  bhat_params$b1_l1[i] = opt_l1_loss_params[2]
+  
+  # Calcular MAEin e MAEout #
+  abs_error_test_l1 = abs(test$Y - Ypred_test_l1)
+  MAEout_l1 = sum(abs_error_test_l1)/15
+  MAE_table$MAEout_l1[i] = MAEout_l1
+  
+  abs_error_train_l1 = abs(train$Y - Ypred_train_l1)
+  MAEin_l1 = sum(abs_error_train_l1)/85
+  MAE_table$MAEin_l1[i] = MAEin_l1
+  
+}
+```
+
+
+```{r averages table}
+avg_results = data.frame(matrix(ncol = 2, nrow = 4))
+col_names = c("Regressao", "Opt L1")
+row_names = c("b0 medio", "b1 medio", "MAEin medio", "MAEout medio")
+colnames(avg_results) = col_names
+rownames(avg_results) = row_names
+
+avg_results$Regressao[1] = mean(bhat_params$b0_reg)
+avg_results$Regressao[2] = mean(bhat_params$b1_reg)
+avg_results$Regressao[3] = mean(MAE_table$MAEin_reg)
+avg_results$Regressao[4] = mean(MAE_table$MAEout_reg)
+
+avg_results$`Opt L1`[1] = mean(bhat_params$b0_l1)
+avg_results$`Opt L1`[2] = mean(bhat_params$b1_l1)
+avg_results$`Opt L1`[3] = mean(MAE_table$MAEin_l1)
+avg_results$`Opt L1`[4] = mean(MAE_table$MAEout_l1)
+
+```
+
+Observa-se que a média do coeficiente **b0** no método utilizando MQO é menor do que utilizando o método de minimização da perda L1. E o contrário se observa para **b1**. 
+
+**Estatísticas do coeficiente b0 utilizando MQO**
+```{r}
+summary(bhat_params$b0_reg)
+```
+
+**Estatísticas do coeficiente b0 utilizando minimização da perda L1**
+```{r}
+summary(bhat_params$b0_l1)
+```
+
+**Estatísticas do coeficiente b1 utilizando MQO**
+```{r}
+summary(bhat_params$b1_reg)
+```
+
+**Estatísticas do coeficiente b1 utilizando minimização da perda L1**
+```{r}
+summary(bhat_params$b1_l1)
+```
+
+
+**Gráficos ilustrando estatísticas dos coeficientes**
+
+```{r graficos coeficientes}
+
+boxplot(list("b0 Reg"=bhat_params$b0_reg, "b0 L1"=bhat_params$b0_l1))
+
+boxplot(list("b1 Reg"=bhat_params$b1_reg, "b1 L1"=bhat_params$b1_l1))
+
+```
+
+Apesar de algumas diferenças na média dos coeficientes **b0** e **b1**, observamos que a média entre os erros absolutos médios fica muito próxima comparando ambos os métodos. Observamos também que o **MAEin** possui muito menos variabilidade do que o **MAEout** o que é esperado pois os coeficientes estão ajustados para o subconjunto de treinamento.
+
+**Gráficos ilustrando estatísticas dos erros absolutos médios**
+
+```{r graficos MAE}
+boxplot(list("MAEin Reg"=MAE_table$MAEin_reg, "MAEin L1"=MAE_table$MAEin_l1,"MAEout Reg"=MAE_table$MAEout_reg, "MAEout L1"=MAE_table$MAEout_l1))
+```
+
+**Tabela com as médias dos coeficientes, MAEin e MAEout**
+
+```{r results='asis'}
+library(knitr)
+kable(avg_results)
+```
+
+
+
+
+## Conclusões
+
+
+Neste estudo, utilizamos uma amostra de 100 empregados para estimar um modelo de predição de salário baseado no tempo de serviço. Utilizamos dois métodos de regressão para esta estimativa: minimização do erro quadrático e minimização do erro absoluto. Após a execução do experimento uma vez, pudemos observar que a média dos erros absolutos da predição de ambos os métodos foram muito parecidas. Ao executarmos o experimento 100 vezes, também observamos o mesmo comportamento, apesar de a média dos coeficientes b0 e b1 ter alguma variação. Para estes dados, não há muita diferença na aplicação dos dois métodos, mas considerando que o método de ... é mais robusto para ... e que isto é uma possibilidade neste contexto, pode ser mais apropriado utilizá-lo. 
