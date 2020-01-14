@@ -1,0 +1,54 @@
+---
+title: "Tarefa 1 - Relatorio"
+author: "Tais Bellini"
+date: "1/12/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introdução
+
+Neste relatório, temos uma amostra de 100 empregados de uma determinada empresa que contém o salário anual (em milhares de reais), denotado pela variável *Y*, e tempo de serviço em anos, denotado pela veriável *X*.  Iremos aplicar dois métodos para estimar um modelo de predição de salário baseado no tempo de serviço: regressão linear simples utilizando MQO e minimização da perda L1.
+
+** os dados foram gerados a partir de uma distribuicao normal por isso fica parecido
+
+## Dados
+
+Primeiramente, vamos observar o gráfico de dispersão dos dados:
+
+```{r dispersao, echo=FALSE}
+data = read.csv2("205650.txt", sep=" ", dec = ".")
+plot(data$X, data$Y, xlab = "anos de serviço", ylab="salário anual (em milhares)", main="Gráfico de dispersão")
+```
+
+Observa-se que há uma relação linear positiva entre os dados e que o salário aumenta a medida que aumentam-se os anos de serviço.
+
+## Estimação do modelo
+
+Para a estimação do modelo que faça a predição do salário baseado no tempo de serviço, utilizamos dois métodos: regressão linear minimizando o erro quadrático (MQO) e regressão linear minimizando o erro absoluto. O experimento realizado consistiu em: (i) dividir aleatoriamente a amostra em dois subconjuntos: treinamento (85% da amostra) e teste (15% da amostra); (ii) encontrar os coeficientes b0 e b1 que melhor ajustem a reta aos dados utilizando o MQO
+
+
+
+
+
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
