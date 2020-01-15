@@ -1,7 +1,7 @@
 ---
 title: "Tarefa 1 - Estimação de modelo preditivo com regressão linear"
-author: "Tais Bellini"
-date: "1/12/2020"
+author: "Tais Bellini - 205650"
+date: "Janeiro, 2020"
 output: word_document
 ---
 
@@ -24,7 +24,7 @@ data = read.csv2("205650.txt", sep=" ", dec = ".")
 plot(data$X, data$Y, xlab = "anos de serviço", ylab="salário anual (em milhares)", main="Gráfico de dispersão")
 ```
 
-Observa-se que há uma relação linear positiva entre os dados e que o salário aumenta a medida que aumentam-se os anos de serviço. Portanto, consideramos apropriado utilizar a regressão linear.
+Observa-se que há uma relação linear positiva entre os dados e que o salário aumenta à medida que aumentam-se os anos de serviço. Portanto, consideramos apropriado utilizar a regressão linear.
 
 ## Estimação do modelo
 
@@ -32,7 +32,7 @@ Para a estimação do modelo que faça a predição do salário baseado no tempo
 
 O experimento realizado consistiu em: 
 
-*(i)* dividir aleatoriamente a amostra em dois subconjuntos: treinamento (85% da amostra) e teste (15% da amostra); *(ii)* encontrar os coeficientes b0 e b1 que melhor ajustam a reta aos dados utilizando o MQO; *(iii)* calcular o erro absoluto médio do método MQO no subconjunto de treinamento (denotado por **MAEin**) e erro absoluto médio do método MQO no subconjunto de teste (denotado por **MAEout**); *(iv)* encontrar os coeficientes **b0** e **b1** que melhor ajustam a reta aos dados minimizando a perda L1; *(v)* calcular o **MAEin** e **MAEout** do método de minimização da perda L1 no subconjunto de teste (denotado por **MAEout**);
+*(i)* dividir aleatoriamente a amostra em dois subconjuntos: treinamento (85% da amostra) e teste (15% da amostra); *(ii)* encontrar os coeficientes **b0** e **b1** que melhor ajustam a reta aos dados utilizando o MQO; *(iii)* calcular o erro absoluto médio do método MQO no subconjunto de treinamento (denotado por **MAEin**) e erro absoluto médio do método MQO no subconjunto de teste (denotado por **MAEout**); *(iv)* encontrar os coeficientes **b0** e **b1** que melhor ajustam a reta aos dados minimizando a perda L1; *(v)* calcular o **MAEin** e **MAEout** do método de minimização da perda L1.
 
 Executando uma única vez o experimento, obtivemos os seguintes resultados:
 
@@ -127,7 +127,7 @@ splitted_data = split_data(data, 0.85)
 
 **Método** | **Coeficiente b0** | **Coeficiente b1** | **MAEin** | **MAEout**
 ------- | ----------------  |---------------- |------- |-------
-Regressão | `r reg$coefficients[1]` | `r reg$coefficients[2]` | `r MAEin_reg` | `r MAEout_reg`
+MQO | `r reg$coefficients[1]` | `r reg$coefficients[2]` | `r MAEin_reg` | `r MAEout_reg`
 Min Perda L1 | `r opt_l1_loss_params[1]` | `r opt_l1_loss_params[2]` | `r MAEin_l1` | `r MAEout_l1`
 
 
@@ -143,16 +143,8 @@ lines(data$X, (opt_l1_loss_params[1] + opt_l1_loss_params[2]*data$X))
 ```
 
 
-Observa-se que os valores ficaram muito próximos, não havendo diferença significativa entre os resultados dos dois métodos. 
+Observa-se que os valores ficaram muito próximos, não havendo diferença significativa entre os erros médios absolutos dos dois métodos. 
 
-
-Ao observarmos os dados, vemos que a distribuição de salário se aproxima de uma distribuição normal: 
-
-```{r}
-hist(data$Y, xlab= "salário", ylab="Frequência", main= "Histograma da variável salário")
-```
-
-Sabemos que o método MQO minimiza o ... 
 
 ### Resultados para 100 repetições
 
@@ -250,22 +242,22 @@ summary(bhat_params$b1_l1)
 ```
 
 
-**Gráficos ilustrando estatísticas dos coeficientes**
+**Gráficos comparando os coeficientes b0 e b1 para cada método de regressão**
 
 ```{r graficos coeficientes}
 
-boxplot(list("b0 Reg"=bhat_params$b0_reg, "b0 L1"=bhat_params$b0_l1))
+boxplot(list("b0 Reg"=bhat_params$b0_reg, "b0 L1"=bhat_params$b0_l1), main="Coeficientes b0 calculados em 100 repetições")
 
-boxplot(list("b1 Reg"=bhat_params$b1_reg, "b1 L1"=bhat_params$b1_l1))
+boxplot(list("b1 Reg"=bhat_params$b1_reg, "b1 L1"=bhat_params$b1_l1), main="Coeficientes b1 calculados em 100 repetições")
 
 ```
 
-Apesar de algumas diferenças na média dos coeficientes **b0** e **b1**, observamos que a média entre os erros absolutos médios fica muito próxima comparando ambos os métodos. Observamos também que o **MAEin** possui muito menos variabilidade do que o **MAEout** o que é esperado pois os coeficientes estão ajustados para o subconjunto de treinamento.
+Apesar de haver algumas diferenças na média dos coeficientes **b0** e **b1**, observamos que a média entre os erros absolutos médios fica muito próxima comparando ambos os métodos. Observamos também que o **MAEin** possui muito menos variabilidade do que o **MAEout** o que é esperado pois os coeficientes estão ajustados para o subconjunto de treinamento.
 
-**Gráficos ilustrando estatísticas dos erros absolutos médios**
+**Gráficos comparando o erro absoluto médio para cada método de regressão**
 
 ```{r graficos MAE}
-boxplot(list("MAEin Reg"=MAE_table$MAEin_reg, "MAEin L1"=MAE_table$MAEin_l1,"MAEout Reg"=MAE_table$MAEout_reg, "MAEout L1"=MAE_table$MAEout_l1))
+boxplot(list("MAEin Reg"=MAE_table$MAEin_reg, "MAEin L1"=MAE_table$MAEin_l1,"MAEout Reg"=MAE_table$MAEout_reg, "MAEout L1"=MAE_table$MAEout_l1), main="Erro absoluto médio em 100 repetições")
 ```
 
 **Tabela com as médias dos coeficientes, MAEin e MAEout**
@@ -281,4 +273,4 @@ kable(avg_results)
 ## Conclusões
 
 
-Neste estudo, utilizamos uma amostra de 100 empregados para estimar um modelo de predição de salário baseado no tempo de serviço. Utilizamos dois métodos de regressão para esta estimativa: minimização do erro quadrático e minimização do erro absoluto. Após a execução do experimento uma vez, pudemos observar que a média dos erros absolutos da predição de ambos os métodos foram muito parecidas. Ao executarmos o experimento 100 vezes, também observamos o mesmo comportamento, apesar de a média dos coeficientes b0 e b1 ter alguma variação. Para estes dados, não há muita diferença na aplicação dos dois métodos, mas considerando que o método de ... é mais robusto para ... e que isto é uma possibilidade neste contexto, pode ser mais apropriado utilizá-lo. 
+Neste estudo, utilizamos uma amostra de 100 empregados para estimar um modelo de predição de salário baseado no tempo de serviço. Utilizamos dois métodos de regressão para esta estimativa: minimização do erro quadrático e minimização do erro absoluto. Após a execução do experimento uma vez, pudemos observar que a média dos erros absolutos da predição de ambos os métodos foram muito parecidas. Ao executarmos o experimento 100 vezes, também observamos o mesmo comportamento, apesar de a média dos coeficientes b0 e b1 ter alguma variação. Para estes dados, não há muita diferença na aplicação dos dois métodos. Se avaliarmos que a empresa em questão pode ter empregados com salários muito altos ou muito baixos, pode ser mais interessante utilizar método de minimização da perda L1, pois é mais robusto para valores discrepantes.
