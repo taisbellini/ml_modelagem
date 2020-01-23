@@ -1,0 +1,18 @@
+---
+title: "Tarefa 2 - LASSO"
+author: "Tais Bellini - 205650"
+date: "Janeiro, 2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Introdução
+
+
+## LASSO para Xi~N(0,sqrt(i)) 
+
+## LASSO para Xi~Exp(sqrt(i))
+
