@@ -2,17 +2,564 @@
 title: "Tarefa 2 - LASSO"
 author: "Tais Bellini - 205650"
 date: "Janeiro, 2020"
-output: word_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+#tinytex::install_tinytex()
+#install.packages("glmnet")
+library(glmnet)
+
+#install.packages("tidyverse")
+library(tidyverse)
+
+#install.packages('reshape2')
+library(reshape2)
+
+#install.packages('ggplot2')
+library(ggplot2)
+
 ```
 
 ## Introdução
 
+Neste relatório, serão realizados experimnentos para avaliar a *Regressão Lasso* e sua capacidade de escolher corretamente as variáveis adequadas para o modelo em diferentes cenários. Para isto, definiremos um modelo que será o verdadeiro e do qual os resultados da *Regressão Lasso* deverão se aproximar. Os cenários incluem: avaliar amostras com distribuição Normal e Exponencial, variações nos parâmetros de *Cross Validation* para definição do $\lambda$, e algumas variações de tamanho de amostra e modelo definido.
 
-## LASSO para Xi~N(0,sqrt(i)) 
+## LASSO para amostra com distribuição Normal
 
-## LASSO para Xi~Exp(sqrt(i))
+Para este experimento, executamos 1000 vezes os seguinte passos: 
 
+(i) gerar uma amostra aleatória de tamanho $n=50$ de $X_{1}, ..., X_{100}$, onde $X_{i}$ ~ $N(0,\sqrt(i))$
+
+(ii) gerar o modelo $Y = 20 + 5X_{1} + 5X_{10} + 5X_{20} + 5X_{50} + 5X_{90} + \varepsilon$ onde $\varepsilon$ ~ $N(0,1)$
+
+(iii) ajustar um modelo LASSO utilizando *k-fold Cross Validation* para $k = 5$
+
+(iv) idem ao item (iii) para $k = 10$
+
+```{r norm generator}
+
+norm_random_sample = function(ncol, nrow){
+  X = matrix(0, ncol = ncol, nrow = nrow)
+  for(j in 1:ncol) {
+    X[,j] = rnorm(nrow, sd = sqrt(j))
+  } 
+  return(X)
+}
+
+```
+
+```{r exp generator}
+exp_random_sample = function(ncol, nrow){
+  X = matrix(0, ncol = ncol, nrow = nrow)
+  for(l in 1:ncol) {
+    X[,l] = rexp(nrow, rate = sqrt(l))
+  } 
+  return(X)
+}
+```
+
+
+```{r structures to store results}
+opt_lambda_k5 = data.frame(ncol=2, nrow=1000)
+colnames(opt_lambda_k5) = c('lambda', 'acertou')
+
+opt_lambda_k10 = data.frame(ncol=2, nrow=1000)
+colnames(opt_lambda_k10) = c('lambda', 'acertou')
+
+hits_count = matrix(ncol=2, nrow=2)
+colnames(hits_count) = c('k=5', 'k=10')
+rownames(hits_count) = c('Exato', 'Inclui')
+hits_count[,1] = rep(0, 2)
+hits_count[,2] = rep(0, 2)
+
+valid_vars = c("(Intercept)", paste("V",c(1,10,20,50,90), sep = ""))
+
+# colocar apenas nas posicoes em que acertou, depois limpar os que n sao
+coefs_k5 = data.frame(0, ncol=2, nrow=1000)
+colnames(coefs_k5) = c('Intercept', 'Media Coeficientes')
+
+coefs_k10 = data.frame(0, ncol=2, nrow=1000)
+colnames(coefs_k10) = c('Intercept', 'Media Coeficientes')
+
+```
+
+```{r loop lasso norm sample}
+ncol = 100
+nrow = 50
+valid_beta = c(1,10,20,50,90)
+set.seed(2056502)
+for (i in 1:1000) {
+  
+  # amostra
+  X = norm_random_sample(ncol, nrow)
+  
+  # modelo base
+  p = 5
+  b = rep(0,ncol)
+  b[c(1,10,20,50,90)] = rep(5,5)
+  Y = 20 + X%*%b + rnorm(nrow)
+  
+  #ajuste
+  
+  #k=5
+  cross_validation = cv.glmnet(X, Y, alpha=1, nfold = 5)
+  opt_lambda = cross_validation$lambda.min
+  opt_lambda_k5[i,1] = opt_lambda
+  opt_adjust = glmnet(X, Y, alpha=1, lambda = opt_lambda)
+  cf = coef(opt_adjust)
+  nonzero_cf = rownames(cf)[cf[,1] != 0]
+  
+  # setdiff (A,B): quais vars A tem que B nao tem
+  if (length(setdiff(nonzero_cf, valid_vars)) == 0) {
+    hits_count[1,1] = hits_count[1,1] + 1
+    # falar no relatorio que usou round para validar
+    model = cf[nonzero_cf,]
+    model_intercept = model[1:1]
+    model_coefs = model[2:6]
+    coefs_k5[i,1] = model_intercept
+    coefs_k5[i,2] = mean(round(model_coefs))
+    opt_lambda_k5[i,2] = 1
+  } else{
+    if(all(valid_vars %in% nonzero_cf)){
+      hits_count[2,1] = hits_count[2,1] + 1
+    }
+    opt_lambda_k5[i,2] = 0
+  }
+  
+  #k=10
+  cross_validation_k10 = cv.glmnet(X, Y, alpha=1, nfold = 10)
+  opt_lambda10 = cross_validation$lambda.min
+  opt_lambda_k10[i,1] = opt_lambda10
+  opt_adjust_k10 = glmnet(X, Y, alpha=1, lambda = opt_lambda10)
+  cf_k10 = coef(opt_adjust_k10)
+  nonzero_cf_k10 = rownames(cf_k10)[cf_k10[,1] != 0]
+  
+  # setdiff (A,B): quais vars A tem que B nao tem
+  if (length(setdiff(nonzero_cf_k10, valid_vars)) == 0) {
+    hits_count[1,2] = hits_count[1,2] + 1
+    # falar no relatorio que usou round para validar
+    model_k10 = cf_k10[nonzero_cf_k10,]
+    model_intercept_k10 = model_k10[1:1]
+    model_coefs_k10 = model_k10[2:6]
+    coefs_k10[i,1] = model_intercept_k10
+    coefs_k10[i,2] = mean(round(model_coefs_k10))
+    opt_lambda_k10[i,2] = 1
+  } else{
+    if(all(valid_vars %in% nonzero_cf_k10)){
+      hits_count[2,2] = hits_count[2,2] + 1
+    }
+    opt_lambda_k10[i,2] = 0
+  }
+}
+```
+
+### Resultados
+
+#### Número de acertos
+
+A tabela abaixo descreve quantas vezes o modelo LASSO acertou exatamente quais eram as variáveis corretas do modelo original e quantas vezes o modelo acertou as variáveis, mas incluiu outras que não eram corretas:
+
+```{r acertos, results='asis'}
+library(knitr)
+kable(hits_count, caption='Acertos exatos e parciais para cada tamanho de k')
+```
+
+Podemos observar que em todas as repetições o modelo LASSO acertou quais eram a variáveis corretas e que houve um equilíbrio entre as vezes em que o acerto foi exato ou apenas incluiu as variáveis certas. Na maioria das vezes não foi um acerto exato e o número de *folds* não promoveu diferença no resultado. 
+
+#### Coeficientes ajustados
+
+```{r coefs}
+coefs_k5 = subset(coefs_k5, Intercept != 0)
+int_round_avg_k5 = round(mean(coefs_k5[,"Intercept"]))
+
+coefs_k10 = subset(coefs_k10, Intercept != 0)
+int_round_avg_k10 = round(mean(coefs_k5[,"Intercept"]))
+
+cf_round_avg_k5 = round(mean(coefs_k5[,2]))
+
+cf_round_avg_k10 = round(mean(coefs_k10[,2]))
+```
+
+Para avaliar se os valores escolhido para $\beta0$ (Intercept), quando o LASSO acertou exatamente o modelo correto foram próximos do verdadeiro, calculamos a média entre eles e depois fizemos um arredondamento utilizando a função
+
+```{r round, eval=FALSE}
+round()
+``` 
+.
+
+Observamos que o valor foi `r int_round_avg_k5` para ambos os tamanhos de $k$. Ou seja, o modelo LASSO estimou $\beta0$ próximo do valor verdadeiro. 
+
+Similarmente, para os coeficientes, calculamos a média de todos os coeficientes escolhidos para cada vez em que o modelo acertou exatamente, depois a média entre todos eles e, por fim, um arredondamento. O resultado tanto para $k=5$ e $k=10$ foi `r cf_round_avg_k5`, indicando que a escolha dos coeficientes também foi próxima dos verdadeiros valores.
+
+### Escolha do lambda otimo
+
+Observamos que os valores de $\lambda$ escolhidos para $k=5$ e $k=10$ foram os mesmos e a média foi `r mean(opt_lambda_k5[, "lambda"])`. A distribuição ficou aproximada da normal. 
+
+```{r lambda_graphs}
+hist(opt_lambda_k5[, "lambda"], main="Histograma dos valores de lambda escolhidos", xlab = "Lambda", ylab = "Freq")
+```
+
+Podemos ver no gráfico abaixo que o modelo acertou mais para valores de $\lambda$ maiores:
+
+```{r lambda_hits}
+data <- melt(opt_lambda_k5,id.vars=c('acertou'), measure.vars=c('lambda'))
+ggplot(data) +
+  geom_boxplot(aes(group = acertou, x=acertou, y=value)) +
+    ggtitle("Valores de lambda quando acertou e errou") + 
+      xlab("Errou(0) / Acertou (1)") +
+        ylab("Lambda") +
+          theme(
+            plot.title = element_text(hjust = 0.5, face='bold')
+          )
+```
+
+
+## LASSO para amostra com distribuição Exponencial
+
+Para este experimento, executamos 1000 vezes os seguinte passos: 
+
+(i) gerar uma amostra aleatória de tamanho 50 de $X_{1}, ..., X_{100}$, onde $X_{i}$ ~ $Exp(\sqrt(i))$
+
+(ii) gerar o modelo $Y = 20 + 5X_{1} + 5X_{10} + 5X_{20} + 5X_{90} + \varepsilon$ onde $\varepsilon$ ~ $Exp(1)$
+
+(iii) ajustar um modelo LASSO utilizando *k-fold Cross Validation* para $k = 5$
+
+(iv) idem ao item (iii) para $k = 10$
+
+Além disso, executamos os mesmos passos acima, mas gerando amostras de tamanho 200 e apenas para $k=10$.
+
+```{r structures exp}
+opt_lambda_k5 = data.frame(ncol=2, nrow=1000)
+colnames(opt_lambda_k5) = c('lambda', 'acertou')
+
+opt_lambda_k10 = data.frame(ncol=2, nrow=1000)
+colnames(opt_lambda_k10) = c('lambda', 'acertou')
+
+hits_count = matrix(ncol=2, nrow=2)
+colnames(hits_count) = c('k=5', 'k=10')
+rownames(hits_count) = c('Exato', 'Inclui')
+hits_count[,1] = rep(0, 2)
+hits_count[,2] = rep(0, 2)
+
+valid_vars = c("(Intercept)", paste("V",c(1,10,20,50,90), sep = ""))
+
+# colocar apenas nas posicoes em que acertou, depois limpar os que n sao
+coefs_k5 = data.frame(0, ncol=2, nrow=1000)
+colnames(coefs_k5) = c('Intercept', 'Media Coeficientes')
+
+coefs_k10 = data.frame(0, ncol=2, nrow=1000)
+colnames(coefs_k10) = c('Intercept', 'Media Coeficientes')
+
+```
+
+```{r loop lasso exp}
+ncol = 100
+nrow = 50
+valid_beta = c(1,10,20,50,90)
+set.seed(2056502)
+for (i in 1:1000) {
+  
+  # amostra
+  X = exp_random_sample(ncol, nrow)
+  
+  # modelo base
+  p = 5
+  b = rep(0,ncol)
+  b[c(1,10,20,50,90)] = rep(5,5)
+  Y = 20 + X%*%b + rexp(nrow)
+  
+  #ajuste
+  
+  #k=5
+  cross_validation = cv.glmnet(X, Y, alpha=1, nfold = 5)
+  opt_lambda = cross_validation$lambda.min
+  opt_lambda_k5[i,1] = opt_lambda
+  opt_adjust = glmnet(X, Y, alpha=1, lambda = opt_lambda)
+  cf = coef(opt_adjust)
+  nonzero_cf = rownames(cf)[cf[,1] != 0]
+  
+  # setdiff (A,B): quais vars A tem que B nao tem
+  if (length(setdiff(nonzero_cf, valid_vars)) == 0) {
+    hits_count[1,1] = hits_count[1,1] + 1
+    # falar no relatorio que usou round para validar
+    model = cf[nonzero_cf,]
+    model_intercept = model[1:1]
+    model_coefs = model[2:6]
+    coefs_k5[i,1] = model_intercept
+    coefs_k5[i,2] = mean(round(model_coefs))
+    opt_lambda_k5[i,2] = 1
+  } else{
+    if(all(valid_vars %in% nonzero_cf)){
+      hits_count[2,1] = hits_count[2,1] + 1
+    }
+    opt_lambda_k5[i,2] = 0
+  }
+  
+  #k=10
+  cross_validation_k10 = cv.glmnet(X, Y, alpha=1, nfold = 10)
+  opt_lambda10 = cross_validation$lambda.min
+  opt_lambda_k10[i,1] = opt_lambda10
+  opt_adjust_k10 = glmnet(X, Y, alpha=1, lambda = opt_lambda10)
+  cf_k10 = coef(opt_adjust_k10)
+  nonzero_cf_k10 = rownames(cf_k10)[cf_k10[,1] != 0]
+  
+  # setdiff (A,B): quais vars A tem que B nao tem
+  if (length(setdiff(nonzero_cf_k10, valid_vars)) == 0) {
+    hits_count[1,2] = hits_count[1,2] + 1
+    # falar no relatorio que usou round para validar
+    model_k10 = cf_k10[nonzero_cf_k10,]
+    model_intercept_k10 = model_k10[1:1]
+    model_coefs_k10 = model_k10[2:6]
+    coefs_k10[i,1] = model_intercept_k10
+    coefs_k10[i,2] = mean(round(model_coefs_k10))
+    opt_lambda_k10[i,2] = 1
+  } else{
+    if(all(valid_vars %in% nonzero_cf_k10)){
+      hits_count[2,2] = hits_count[2,2] + 1
+    }
+    opt_lambda_k10[i,2] = 0
+  }
+}
+```
+
+### Resultados
+
+#### Número de acertos
+
+Podemos observar na tabela abaixo que o modelo LASSO já não obteve tantos acertos quando a amostra possui distribuição exponencial:
+
+```{r acertos exp, results='asis'}
+library(knitr)
+kable(hits_count, caption='Acertos exatos e parciais para cada tamanho de k')
+```
+
+Podemos ver que em apenas uma das repetições o modelo LASSO acertou exatamente as variáveis corretas e que na maioria das vezes acertou parcialmente, incluindo todas as variáveis certas mas outras incorretas. Neste caso, houveram repetições em que o modelo errou completamente, não incluindo todas as variáveis verdadeiras. O número de *folds* também não promoveu diferença no resultado. 
+
+#### Coeficientes ajustados
+
+```{r coefs exp}
+coefs_k5 = subset(coefs_k5, Intercept != 0)
+int_round_avg_k5 = round(mean(coefs_k5[,"Intercept"]))
+
+coefs_k10 = subset(coefs_k10, Intercept != 0)
+int_round_avg_k10 = round(mean(coefs_k5[,"Intercept"]))
+
+cf_round_avg_k5 = round(mean(coefs_k5[,2]))
+
+cf_round_avg_k10 = round(mean(coefs_k10[,2]))
+```
+
+Utilizamos os mesmos cálculos do experimento anterior para avaliar se os coeficientes escolhidos pelo modelo LASSO foram próximos dos verdadeiros definidos no modelo original.
+Observamos que a média foi `r int_round_avg_k5` para ambos os tamanhos de $k$. Ou seja, o modelo LASSO **não** estimou $\beta0$ próximo do valor verdadeiro. 
+
+Já a média dos coeficientes tanto para $k=5$ e $k=10$ foi `r cf_round_avg_k5`, indicando que a escolha dos coeficientes também **não** se aproximou dos verdadeiros valores.
+
+### Escolha do lambda otimo
+
+Observa-se que os valores de $\lambda$ escolhidos para $k=5$ e $k=10$ foram os mesmos e a média foi `r mean(opt_lambda_k5[, "lambda"])`.
+
+```{r lambda_graphs_exp}
+hist(opt_lambda_k10[, "lambda"], main="Histograma dos valores de lambda escolhidos", xlab = "Lambda", ylab = "Freq")
+```
+
+Percebemos que a distribuição do $\lambda$ neste caso já não se aproxima de uma Normal.
+
+A única vez que o modelo LASSO acertou foi quando o valor de $\lambda$ foi mais elevado do que a média dos valores escolhidos, como pode ser observado no gráfico abaixo: 
+
+
+```{r lambda_hits_exp}
+data <- melt(opt_lambda_k5,id.vars=c('acertou'), measure.vars=c('lambda'))
+ggplot(data) +
+  geom_boxplot(aes(group = acertou, x=acertou, y=value)) +
+    ggtitle("Valores de lambda quando acertou e errou") + 
+      xlab("Errou(0) / Acertou (1)") +
+        ylab("Lambda") +
+          theme(
+            plot.title = element_text(hjust = 0.5, face='bold')
+          )
+```
+
+O valor de $\lambda$ quando o modelo acertou foi `r opt_lambda_k5[,"lambda"][opt_lambda_k5[,"acertou"] == 1]` e a média do $\lambda$ escolhido quando o modelo errou foi `r mean(opt_lambda_k5[,"lambda"][opt_lambda_k5[,"acertou"] == 0])`. 
+
+### Tamanho de amostra 200
+
+```{r structures exp n200}
+opt_lambda_k10 = data.frame(ncol=2, nrow=1000)
+colnames(opt_lambda_k10) = c('lambda', 'acertou')
+
+hits_count = matrix(ncol=1, nrow=2)
+colnames(hits_count) = c('Número de acertos')
+rownames(hits_count) = c('Exato', 'Inclui')
+hits_count[,1] = rep(0, 2)
+
+valid_vars = c("(Intercept)", paste("V",c(1,10,20,50,90), sep = ""))
+
+coefs_k10 = data.frame(0, ncol=2, nrow=1000)
+colnames(coefs_k10) = c('Intercept', 'Media Coeficientes')
+
+```
+
+```{r loop lasso exp n200}
+ncol = 100
+nrow = 200
+valid_beta = c(1,10,20,50,90)
+set.seed(2056502)
+for (i in 1:1000) {
+  
+  # amostra
+  X = exp_random_sample(ncol, nrow)
+  
+  # modelo base
+  p = 5
+  b = rep(0,ncol)
+  b[c(1,10,20,50,90)] = rep(5,5)
+  Y = 20 + X%*%b + rexp(nrow)
+  
+  #ajuste
+  
+  #k=10
+  cross_validation_k10 = cv.glmnet(X, Y, alpha=1, nfold = 10)
+  opt_lambda10 = cross_validation$lambda.min
+  opt_lambda_k10[i,1] = opt_lambda10
+  opt_adjust_k10 = glmnet(X, Y, alpha=1, lambda = opt_lambda10)
+  cf_k10 = coef(opt_adjust_k10)
+  nonzero_cf_k10 = rownames(cf_k10)[cf_k10[,1] != 0]
+  
+  # setdiff (A,B): quais vars A tem que B nao tem
+  if (length(setdiff(nonzero_cf_k10, valid_vars)) == 0) {
+    hits_count[1,1] = hits_count[1,1] + 1
+    # falar no relatorio que usou round para validar
+    model_k10 = cf_k10[nonzero_cf_k10,]
+    model_intercept_k10 = model_k10[1:1]
+    model_coefs_k10 = model_k10[2:6]
+    coefs_k10[i,1] = model_intercept_k10
+    coefs_k10[i,2] = mean(round(model_coefs_k10))
+    opt_lambda_k10[i,2] = 1
+  } else{
+    if(all(valid_vars %in% nonzero_cf_k10)){
+      hits_count[2,1] = hits_count[2,1] + 1
+    }
+    opt_lambda_k10[i,2] = 0
+  }
+}
+
+```
+
+
+Vemos na tabela abaixo que o modelo LASSO não apresentou melhora mesmo com o tamanho de amostra $n=200$.
+
+```{r acertos exp n200, results='asis'}
+library(knitr)
+kable(hits_count, caption='Acertos exatos e parciais para tamanho de amostra 200')
+```
+
+
+### Alterando as variáveis resposta
+
+Agora, vamos repetir o experimento mas alterando o modelo base para: $Y = 20 + 5X_{1} + 5X_{2} + 5X_{3} + 5X_{4} + \varepsilon$ onde $\varepsilon$ ~ $N(0,1)$
+
+```{r structures 12345}
+opt_lambda_k5 = data.frame(ncol=2, nrow=1000)
+colnames(opt_lambda_k5) = c('lambda', 'acertou')
+
+opt_lambda_k10 = data.frame(ncol=2, nrow=1000)
+colnames(opt_lambda_k10) = c('lambda', 'acertou')
+
+hits_count = matrix(ncol=2, nrow=2)
+colnames(hits_count) = c('k=5', 'k=10')
+rownames(hits_count) = c('Exato', 'Inclui')
+hits_count[,1] = rep(0, 2)
+hits_count[,2] = rep(0, 2)
+
+valid_vars = c("(Intercept)", paste("V",c(1,2,3,4,5), sep = ""))
+
+# colocar apenas nas posicoes em que acertou, depois limpar os que n sao
+coefs_k5 = data.frame(0, ncol=2, nrow=1000)
+colnames(coefs_k5) = c('Intercept', 'Media Coeficientes')
+
+coefs_k10 = data.frame(0, ncol=2, nrow=1000)
+colnames(coefs_k10) = c('Intercept', 'Media Coeficientes')
+
+```
+
+
+```{r loop lasso norm 12345}
+ncol = 100
+nrow = 50
+valid_beta = c(1,2,3,4,5)
+set.seed(2056502)
+for (i in 1:1000) {
+  
+  # amostra
+  X = norm_random_sample(ncol, nrow)
+  
+  # modelo base
+  p = 5
+  b = rep(0,ncol)
+  b[c(1,2,3,4,5)] = rep(5,5)
+  Y = 20 + X%*%b + rnorm(nrow)
+  
+  #ajuste
+  
+  #k=5
+  cross_validation = cv.glmnet(X, Y, alpha=1, nfold = 5)
+  opt_lambda = cross_validation$lambda.min
+  opt_lambda_k5[i,1] = opt_lambda
+  opt_adjust = glmnet(X, Y, alpha=1, lambda = opt_lambda)
+  cf = coef(opt_adjust)
+  nonzero_cf = rownames(cf)[cf[,1] != 0]
+  
+  # setdiff (A,B): quais vars A tem que B nao tem
+  if (length(setdiff(nonzero_cf, valid_vars)) == 0) {
+    hits_count[1,1] = hits_count[1,1] + 1
+    # falar no relatorio que usou round para validar
+    model = cf[nonzero_cf,]
+    model_intercept = model[1:1]
+    model_coefs = model[2:6]
+    coefs_k5[i,1] = model_intercept
+    coefs_k5[i,2] = mean(round(model_coefs))
+    opt_lambda_k5[i,2] = 1
+  } else{
+    if(all(valid_vars %in% nonzero_cf)){
+      hits_count[2,1] = hits_count[2,1] + 1
+    }
+    opt_lambda_k5[i,2] = 0
+  }
+  
+  #k=10
+  cross_validation_k10 = cv.glmnet(X, Y, alpha=1, nfold = 10)
+  opt_lambda10 = cross_validation$lambda.min
+  opt_lambda_k10[i,1] = opt_lambda10
+  opt_adjust_k10 = glmnet(X, Y, alpha=1, lambda = opt_lambda10)
+  cf_k10 = coef(opt_adjust_k10)
+  nonzero_cf_k10 = rownames(cf_k10)[cf_k10[,1] != 0]
+  
+  # setdiff (A,B): quais vars A tem que B nao tem
+  if (length(setdiff(nonzero_cf_k10, valid_vars)) == 0) {
+    hits_count[1,2] = hits_count[1,2] + 1
+    # falar no relatorio que usou round para validar
+    model_k10 = cf_k10[nonzero_cf_k10,]
+    model_intercept_k10 = model_k10[1:1]
+    model_coefs_k10 = model_k10[2:6]
+    coefs_k10[i,1] = model_intercept_k10
+    coefs_k10[i,2] = mean(round(model_coefs_k10))
+    opt_lambda_k10[i,2] = 1
+  } else{
+    if(all(valid_vars %in% nonzero_cf_k10)){
+      hits_count[2,2] = hits_count[2,2] + 1
+    }
+    opt_lambda_k10[i,2] = 0
+  }
+}
+```
+  
+
+```{r acertos12345, results='asis'}
+library(knitr)
+kable(hits_count, caption='Acertos exatos e parciais para cada tamanho de k')
+```
+
+
+Observamos que com as variáveis corretas sendo $X_{1},X_{2},X_{3},X_{4},X_{5}$ o modelo LASSO não acerta as variáveis verdadeiras, apesar de incluí-las em todas as repetições. Acredito que a natureza Normal da distribuição das variáveis e do $\epsilon$ possam ter influência neste resultado.

@@ -7,6 +7,8 @@ library(glmnet)
 #install.packages("tidyverse")
 library(tidyverse)
 
+install.packages('stargazer')
+
 
 #---- Funcoes auxiliares ----
 
@@ -18,13 +20,17 @@ norm_random_sample = function(ncol, nrow){
   return(X)
 }
 
+exp_random_sample = function(ncol, nrow){
+  X = matrix(0, ncol = ncol, nrow = nrow)
+  for(j in 1:ncol) {
+    X[,j] = rnorm(nrow, sd = sqrt(j))
+  } 
+  return(X)
+}
+
 # 3 LASSO 1000x
 
-ncol = 100
-nrow = 50
-valid_beta = c(1,10,20,50,90)
-
-# estruturas para armazenar resultados
+#---- estruturas para armazenar resultados ----
 
 opt_lambda_k5 = matrix(0, ncol=2, nrow=1000)
 colnames(opt_lambda_k5) = c('lambda', 'acertou')
@@ -47,6 +53,10 @@ colnames(coefs_k5) = c('Intercept', 'Media Coeficientes')
 coefs_k10 = matrix(ncol=2, nrow=1000)
 colnames(coefs_k10) = c('Intercept', 'Media Coeficientes')
 
+#---- Loop LASSO ----
+ncol = 100
+nrow = 50
+valid_beta = c(1,10,20,50,90)
 set.seed(2056502)
 for (i in 1:1000) {
   
@@ -114,12 +124,26 @@ for (i in 1:1000) {
 
 hits_count
 coefs_k5
+coefs_k5 = coefs_k5[!is.na(coefs_k5[,'Intercept'])]
+coefs_k5
 coefs_k10
 opt_lambda_k5
 opt_lambda_k10
 
+colnames(coefs_k5)
+coefs_k5 = subset(coefs_k5, "Intercept" != 0)
+mean(coefs_k5[,'Intercept'])
 
-# 1 - 100 amostras independentes Xi~N(0,sqrt(i))
+hist(opt_lambda_k5[, "lambda"])
+plot(opt_lambda_k5[, "lambda"])
+summary(opt_lambda_k5[, "lambda"])
+
+install.packages("ggplot2")
+library(ggplot2)
+ggplot(stack(opt_lambda_k5), aes(x = opt_lambda_k5[, "acertou"], y = opt_lambda_k5[, "lambda"])) +
+  geom_boxplot()
+
+# 1 - 50 amostras independentes Xi~N(0,sqrt(i))
 
 ncol = 100
 nrow = 50
