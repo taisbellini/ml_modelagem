@@ -27,7 +27,7 @@
 attach(mtcars)
 
 
-# variáveis am e vs são categóricas e devem ser excluídas
+# vari?veis am e vs s?o categ?ricas e devem ser exclu?das
 names(mtcars)
 dados=mtcars[,-c(8,9)]
 head(dados)
@@ -35,6 +35,7 @@ head(dados)
 
 mtcars.pca <- prcomp(dados, center = TRUE,scale. = TRUE)
 summary(mtcars.pca)
+# Componentes 1 e 2 explicam 0.62+0.23 % da variabilidade!!
 
 # Checando...
 DD = svd(as.matrix(scale(dados, center=TRUE)))
@@ -42,13 +43,17 @@ round(DD$v,2)
 round(mtcars.pca$rotation,2)
 
 
-# plotando fácil e bonito!
+# plotando f?cil e bonito!
 library(devtools)
-#install_github("vqv/ggbiplot")
+install_github("vqv/ggbiplot")
 
 library(ggbiplot)
 
+
 ggbiplot(mtcars.pca)+theme_minimal() 
+# cada ponto Ã© o carro plotado no plano novo criado pelo PCA
+# aqui estamos usando PCA1 e PCA2 que sao as componentes que explicam a maioria da variabilidade
+# cada vetor Ã© uma variavel 
 ggbiplot(mtcars.pca, labels=rownames(mtcars))+theme_minimal()
 
 
@@ -66,7 +71,7 @@ ggbiplot(mtcars.pca, ellipse=TRUE, labels=rownames(mtcars), groups=mtcars.countr
 ggbiplot(mtcars.pca, obs.scale = 1, var.scale = 1,var.axes=FALSE,   labels=rownames(mtcars), groups=mtcars.country)
 
 
-# pobre das outras componentes! Não vamos olhar para elas?
+# pobre das outras componentes! N?o vamos olhar para elas?
 
 ggbiplot(mtcars.pca, choices=c(3,4), ellipse=TRUE,  labels=rownames(mtcars), groups=mtcars.country)+ theme_minimal() 
 
@@ -87,22 +92,22 @@ plot(dados[,c("hp","mpg")],
      col=cores, 
      pch=pchs,
      cex=2)
-legend("topright",legend=c("Japão","Europa", "EUA"), pch=c(1,22,24), bty="n" )
+legend("topright",legend=c("Jap?o","Europa", "EUA"), pch=c(1,22,24), bty="n" )
 points(km$centers, pch=18, cex=2)
 
 
 
 
-# Condição inicial
+# Condi??o inicial
 
 centros.ini=rbind(c(50,20),c(300,30))
 pchs=(mtcars.country=="Japan")*1  +(mtcars.country=="Europe")*22  +(mtcars.country=="US")*24
 
 plot(dados[,c("hp","mpg")], pch=pchs,cex=2)
-legend("topright",legend=c("Japão","Europa", "EUA"), pch=c(1,22,24), bty="n" )
+legend("topright",legend=c("Jap?o","Europa", "EUA"), pch=c(1,22,24), bty="n" )
 points(centros.ini, pch="0")
 
-#Primeira iteração
+#Primeira itera??o
 
 km1 = kmeans( dados[,c("hp","mpg")],2, iter.max = 1, centers = centros.ini)
 cores = ifelse(km1$cluster==1,"blue","red")
@@ -111,12 +116,12 @@ plot(dados[,c("hp","mpg")],
      col=cores, 
      pch=pchs,
      cex=2)
-legend("topright",legend=c("Japão","Europa", "EUA"), pch=c(1,22,24), bty="n" )
+legend("topright",legend=c("Jap?o","Europa", "EUA"), pch=c(1,22,24), bty="n" )
 points(centros.ini, pch="0")
 points(km1$centers, pch="1")
 
 
-#Segunda iteração
+#Segunda itera??o
 
 km2 = kmeans( dados[,c("hp","mpg")],2, iter.max = 2, centers = centros.ini)
 cores = ifelse(km2$cluster==1,"blue","red")
@@ -125,14 +130,14 @@ plot(dados[,c("hp","mpg")],
      col=cores, 
      pch=pchs,
      cex=2)
-legend("topright",legend=c("Japão","Europa", "EUA"), pch=c(1,22,24), bty="n" )
+legend("topright",legend=c("Jap?o","Europa", "EUA"), pch=c(1,22,24), bty="n" )
 points(centros.ini, pch="0")
 points(km1$centers, pch="1")
 points(km2$centers, pch="2")
 
 #######
 #
-# K-means na dimensão do PCH
+# K-means na dimens?o do PCH
 #
 #######
 
@@ -146,7 +151,7 @@ plot(mtcars.pca$x,
      col=cores, 
      pch=pchs,
      cex=2)
-legend(x=-4 ,y=5, ncol=3,legend=c("Japão","Europa", "EUA"), pch=c(1,22,24), bty="n", cex=1.2 )
+legend(x=-4 ,y=5, ncol=3,legend=c("Jap?o","Europa", "EUA"), pch=c(1,22,24), bty="n", cex=1.2 )
 points(km.pca$centers, pch=18, cex=2)
 
 
