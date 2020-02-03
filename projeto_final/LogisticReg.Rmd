@@ -175,3 +175,13 @@ print("Taxa de acerto:")
 correct/total
 ```
 
+
+#TODO
+
+- Modificar o banco para usar variaveis dummy
+- Remover Imp e SS
+
+  
+
+
+

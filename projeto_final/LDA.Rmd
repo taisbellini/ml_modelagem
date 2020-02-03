@@ -135,7 +135,6 @@ modelFit<- train(medium_drugs~Education+Country+Age+Gender+NScore+EScore+OScore+
 
 confusionMatrix(test$medium_drugs, predict(modelFit, test))
 
-
 ```
 
 Tivemos aprox 70% afccuracy. Parecido com regressao logistica.
