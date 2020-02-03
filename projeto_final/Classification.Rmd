@@ -45,7 +45,7 @@ summary(data)
 Vamos começar com medium drugs que é o que tem praticamente meio a meio de respostas:
 
 ```{r}
-#install.packages("ggplot2")
+install.packages("ggplot2")
 library(ggplot2)
 country_filter_data <- data[data$Country %in% c("UK", "USA", "Canada"),]
 ggplot(country_filter_data, aes(x = medium_drugs, y = NScore, fill = medium_drugs)) +   geom_boxplot(size = .75) +   facet_grid(Country ~ Gender, margins = FALSE) +   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
@@ -67,7 +67,7 @@ data_dummy = data.frame(data_dummy, medium_drugs)
 
 Segundo, vamos dividir os dados entre treino e teste:
 ```{r}
-#install.packages("MASS")
+install.packages("MASS")
 library(MASS)
 # Funcao para dividir dados aleatoriamente em treinamento e teste #
 split_data = function(data, train_perc){
@@ -90,7 +90,7 @@ test <- splitted_data$test
 
 Rodar o modelo para o set de treinamento:
 ```{r}
-#install.packages("naivebayes")
+install.packages("naivebayes")
 library(naivebayes)
 
 model_fit <- naive_bayes(medium_drugs~Ethnicity+Education+Country+Age+Gender+NScore+EScore+OScore+AScore+CScore+Impulsive+SS+light_drugs, data = train, laplace = 1)
@@ -130,7 +130,7 @@ acertos_nayve_bayes <- correct/total
 
 Rodar o modelo para o set de treinamento:
 ```{r}
-#install.packages("rpart")
+install.packages("rpart")
 library(rpart)
 model_fit <- rpart(medium_drugs~Ethnicity+Education+Country+Age+Gender+NScore+EScore+OScore+AScore+CScore+Impulsive+SS+light_drugs, data = train, method = "class")
 
@@ -178,7 +178,7 @@ Vamos explorar ainda métodos de Seleção de Variáveis
 1º Método: usando Random Forest
 
 ```{r}
-#install.packages("party")
+install.packages("party")
 library(party)
 set.seed(182931)
 cf1 <- cforest(data_dummy$medium_drugs ~ . , data= data_dummy, control=cforest_unbiased(mtry=2,ntree=50)) # fit the random forest
@@ -191,8 +191,7 @@ r
 2º Método: usando o pacote Boruta (mais lento)
 
 ```{r}
-#boruta
-#install.packages("Boruta")
+install.packages("Boruta")
 library(Boruta)
 set.seed(182931)
 boruta <- Boruta(data$medium_drugs~., data = data, doTrace = 2)
