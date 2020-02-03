@@ -28,6 +28,7 @@ data <- transform(data, heavy_drugs = ifelse(
      (VSA == "Never Used" | VSA == "Used over a Decade Ago")), "No", "Yes"))
 
 #teste
+#teste_git
 
 head(data)
 table(data$light_drugs)
