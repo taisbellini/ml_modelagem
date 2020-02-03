@@ -1,0 +1,201 @@
+---
+title: "Trabalho Final - Outros Métodos de Classificação"
+output: html_notebook
+---
+
+Carregando os dados e criando as categorias de drogas pré definidas pelo grupo:
+
+```{r}
+data <- readxl::read_xlsx("drug_consumption_dataset.xlsx")
+head(data)
+
+data <- transform(data, light_drugs = ifelse(
+  ((Alcohol == "Never Used" | Alcohol == "Used over a Decade Ago") &
+     (Caff == "Never Used" | Caff == "Used over a Decade Ago") &
+     (Nicotine == "Never Used" | Nicotine == "Used over a Decade Ago") &
+     (Choc == "Never Used" | Choc == "Used over a Decade Ago")), "No", "Yes"))
+
+data <- transform(data, medium_drugs = ifelse(
+  ((Cokes == "Never Used" | Cokes == "Used over a Decade Ago") &
+     (Ecstasy == "Never Used" | Ecstasy == "Used over a Decade Ago") &
+     (LSD == "Never Used" | LSD == "Used over a Decade Ago") &
+     (Mushrooms == "Never Used" | Mushrooms == "Used over a Decade Ago")), "No", "Yes"))
+
+data <- transform(data, heavy_drugs = ifelse(
+  ((Amphet == "Never Used" | Amphet == "Used over a Decade Ago") &
+     (Crack == "Never Used" | Crack == "Used over a Decade Ago") &
+     (Heroin == "Never Used" | Heroin == "Used over a Decade Ago") &
+     (VSA == "Never Used" | VSA == "Used over a Decade Ago")), "No", "Yes"))
+
+#teste
+#teste_git
+
+head(data)
+table(data$light_drugs)
+table(data$medium_drugs)
+table(data$heavy_drugs)
+
+```
+
+
+```{r}
+summary(data)
+```
+
+Vamos começar com medium drugs que é o que tem praticamente meio a meio de respostas:
+
+```{r}
+#install.packages("ggplot2")
+library(ggplot2)
+country_filter_data <- data[data$Country %in% c("UK", "USA", "Canada"),]
+ggplot(country_filter_data, aes(x = medium_drugs, y = NScore, fill = medium_drugs)) +   geom_boxplot(size = .75) +   facet_grid(Country ~ Gender, margins = FALSE) +   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+Já fizemos essas mesmas etapas utilizando Logistic Regression e LDA. Vamos agora testar outros métodos.
+
+Primeiro, vamos introduzir variáveis dummy.
+
+```{r}
+#install.packages("fastDummies")
+library(fastDummies)
+medium_drugs <- data$medium_drugs
+data_dummy <- dummy_cols(data, remove_selected_columns = TRUE)
+data_dummy$medium_drugs_No <- NULL
+data_dummy$medium_drugs_Yes <- NULL
+data_dummy = data.frame(data_dummy, medium_drugs)
+```
+
+Segundo, vamos dividir os dados entre treino e teste:
+```{r}
+#install.packages("MASS")
+library(MASS)
+# Funcao para dividir dados aleatoriamente em treinamento e teste #
+split_data = function(data, train_perc){
+  train_size <- floor(train_perc * nrow(data))
+  train_index <- sample(seq_len(nrow(data)), size = train_size)
+  train <- data[train_index, ]
+  test <- data[-train_index, ]
+  return(list("train" = train,
+              "test" = test))
+}
+
+set.seed(205650)
+splitted_data <- split_data(data, 0.85)
+train <- splitted_data$train
+test <- splitted_data$test
+
+```
+
+1º Método: Nayve-Bayes
+
+Rodar o modelo para o set de treinamento:
+```{r}
+#install.packages("naivebayes")
+library(naivebayes)
+
+model_fit <- naive_bayes(medium_drugs~Ethnicity+Education+Country+Age+Gender+NScore+EScore+OScore+AScore+CScore+Impulsive+SS+light_drugs, data = train, laplace = 1)
+
+model_fit
+```
+
+Fazer a predicao com o modelo de teste: 
+
+```{r}
+predictions <- round(predict(model_fit,test,type = "p"), 3)
+predictions <- as.data.frame(predictions)
+library(data.table)
+setDT(predictions, keep.rownames = "ID")[]
+```
+
+Testes de comparacao:
+
+```{r}
+predictions_ids = as.numeric(predictions$ID)
+total = length(test$ID)
+correct = 0
+for (i in predictions_ids) {
+  predicted = predictions[predictions$ID == toString(as.integer(i))]
+  predicted <- predicted[,-1]
+  predicted = colnames(predicted)[max.col(predicted[1, ], ties.method = "first")]
+  if(predicted == test[i,"medium_drugs"]) {
+    correct = correct + 1
+  }
+}
+print("Taxa de acerto:")
+correct/total
+acertos_nayve_bayes <- correct/total
+```
+
+2º Método: Decisions Trees
+
+Rodar o modelo para o set de treinamento:
+```{r}
+#install.packages("rpart")
+library(rpart)
+model_fit <- rpart(medium_drugs~Ethnicity+Education+Country+Age+Gender+NScore+EScore+OScore+AScore+CScore+Impulsive+SS+light_drugs, data = train, method = "class")
+
+model_fit
+```
+
+Fazer a predicao com o modelo de teste: 
+
+```{r}
+predictions <- round(predict(model_fit,test,type = "p"), 3)
+predictions <- as.data.frame(predictions)
+library(data.table)
+setDT(predictions, keep.rownames = "ID")[]
+```
+
+Testes de comparacao:
+
+```{r}
+predictions_ids = as.numeric(predictions$ID)
+total = length(test$ID)
+correct = 0
+for (i in predictions_ids) {
+  predicted = predictions[predictions$ID == toString(as.integer(i))]
+  predicted <- predicted[,-1]
+  predicted = colnames(predicted)[max.col(predicted[1, ], ties.method = "first")]
+  if(predicted == test[toString(i),"medium_drugs"]) {
+    correct = correct + 1
+  }
+}
+print("Taxa de acerto:")
+correct/total
+acertos_trees <- correct/total
+```
+
+Comparando os métodos:
+```{r}
+print("Taxa de acerto Nayve Bayes:")
+acertos_nayve_bayes
+print("Taxa de acerto Decision Trees:")
+acertos_trees
+```
+
+Vamos explorar ainda métodos de Seleção de Variáveis
+
+1º Método: usando Random Forest
+
+```{r}
+#install.packages("party")
+library(party)
+set.seed(182931)
+cf1 <- cforest(data_dummy$medium_drugs ~ . , data= data_dummy, control=cforest_unbiased(mtry=2,ntree=50)) # fit the random forest
+r = sort(varimp(cf1), decreasing = TRUE)
+r
+
+```
+
+
+2º Método: usando o pacote Boruta (mais lento)
+
+```{r}
+#boruta
+#install.packages("Boruta")
+library(Boruta)
+set.seed(182931)
+boruta <- Boruta(data$medium_drugs~., data = data, doTrace = 2)
+print(boruta)
+
+```
