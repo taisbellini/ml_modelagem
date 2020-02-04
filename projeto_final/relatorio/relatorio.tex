@@ -1,0 +1,250 @@
+% abtex2-modelo-artigo.tex, v-1.9.2 laurocesar
+% Copyright 2012-2014 by abnTeX2 group at http://abntex2.googlecode.com/ 
+%
+% abnTeX2: Modelo de Artigo Acadêmico em conformidade com
+% ABNT NBR 6022:2003: Informação e documentação - Artigo em publicação 
+% periódica científica impressa - Apresentação
+%-------------------------------------------------------------------------------------------
+
+\documentclass[
+	% -- opções da classe memoir --
+	article,			% indica que é um artigo acadêmico
+	11pt,				% tamanho da fonte
+	oneside,			% para impressão apenas no verso. Oposto a twoside
+	a4paper,			% tamanho do papel. 
+	% -- opções da classe abntex2 --
+	%chapter=TITLE,		% títulos de capítulos convertidos em letras maiúsculas
+	%section=TITLE,		% títulos de seções convertidos em letras maiúsculas
+	%subsection=TITLE,	% títulos de subseções convertidos em letras maiúsculas
+	%subsubsection=TITLE % títulos de subsubseções convertidos em letras maiúsculas
+	% -- opções do pacote babel --
+	english,			% idioma adicional para hifenização
+	brazil,				% o último idioma é o principal do documento
+	sumario=tradicional
+	]{abntex2}
+
+\usepackage{lmodern}			% Usa a fonte Latin Modern
+\usepackage[T1]{fontenc}		% Selecao de codigos de fonte.
+\usepackage[utf8]{inputenc}		% Codificacao do documento (conversão automática dos acentos)
+\usepackage{indentfirst}		% Indenta o primeiro parágrafo de cada seção.
+\usepackage{nomencl} 			% Lista de simbolos
+\usepackage{color}				% Controle das cores
+\usepackage{graphicx}			% Inclusão de gráficos
+\usepackage{microtype} 			% para melhorias de justificação
+\usepackage{lipsum}				% para geração de dummy text
+\usepackage[brazilian,hyperpageref]{backref}	 % Paginas com as citações na bibl
+\usepackage[num]{abntex2cite}	% Citações padrão ABNT \alf
+\usepackage{authblk}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+
+\renewcommand{\backrefpagesname}{Citado na(s) página(s):~}
+% Texto padrão antes do número das páginas
+\renewcommand{\backref}{}
+% Define os textos da citação
+\renewcommand*{\backrefalt}[4]{
+	\ifcase #1 %
+		Nenhuma citação no texto.%
+	\or
+		Citado na página #2.%
+	\else
+		Citado #1 vezes nas páginas #2.%
+	\fi}%
+
+% Informações de dados
+
+\titulo{Título do Trabalho \\ Subtítulo do Trabalho}
+
+\author[1]{Albertine Weber}
+\author[2]{Brenda Rolt}
+\author[1]{Eduardo Brock}
+\author[2]{Mayara Soares}
+\author[2]{Thais Bellini}
+
+\affil[1]{Instituto de Física - Universidade Federal do Rio Grande do Sul}
+\affil[2]{Instituto de Matemática e Estatística - Universidade Federal do Rio Grande do Sul}
+
+\local{Brasil}
+
+\data{\today}
+
+% Configurações de aparência do PDF final
+
+\definecolor{blue}{RGB}{41,5,195}
+\makeatletter
+\hypersetup{
+     	%pagebackref=true,
+		pdftitle={\@title}, 
+		pdfauthor={\@author},
+    	pdfsubject={Modelo de artigo científico com abnTeX2},
+	    pdfcreator={LaTeX with abnTeX2},
+		pdfkeywords={abnt}{latex}{abntex}{abntex2}{atigo científico}, 
+		colorlinks=true,       		% false: boxed links; true: colored links
+    	linkcolor=blue,          	% color of internal links
+    	citecolor=blue,        		% color of links to bibliography
+    	filecolor=magenta,      	% color of file links
+		urlcolor=blue,
+		bookmarksdepth=4
+}
+
+\makeatother
+\setlrmarginsandblock{3cm}{3cm}{*} % Altera as margens padrões
+\setulmarginsandblock{3cm}{3cm}{*} % Altera as margens padrões
+\checkandfixthelayout
+\makeindex % compila o indice
+\setlength{\parindent}{1.3cm} % O tamanho do parágrafo
+\setlength{\parskip}{0.2cm}  % Controle do espaçamento entre um parágrafo e outro
+\SingleSpacing % Espaçamento simples
+%-------------------------------------------------------------------------------------------
+
+\begin{document}
+\selectlanguage{brazil}
+% ----------------------------------------------------------
+% Capa
+% ----------------------------------------------------------
+
+\begin{titlepage}
+    \begin{center}
+        \Large
+        UNIVERSIDADE FEDERAL DO RIO GRANDE DO SUL\\
+        INSTITUTO DE MATEMÁTICA E ESTATÍSTICA\\
+        
+        \vspace{1.5cm}
+ 
+        Albertine Weber\\
+        Brenda Rolt\\
+        Eduardo Brock\\
+        Mayara Soares\\
+        Thais Bellini
+        
+        \vspace{5.0cm}
+        
+        \Huge\textbf{Título do Trabalho}
+        
+        \vspace{0.5cm}
+        
+        \LARGE Subtítulo do Trabalho
+        
+        \vfill
+        
+        Projeto final do curso de Machine Learning e Modelagem Estatística ofertado durante o Curso de Verão 2020
+ 
+        \vspace{0.8cm}
+ 
+        \Large
+        Porto Alegre\\
+        \today
+    \end{center}
+\end{titlepage}
+
+\pretextual
+\frenchspacing % Retira espaço extra obsoleto entre as frases.
+\maketitle
+
+\begin{resumoumacoluna}
+\lipsum[1]
+ 
+ \vspace{\onelineskip}
+ 
+ \noindent
+ \textbf{Palavras-chaves}: PALAVRA-CHAVE, PALAVRA-CHAVE E PALAVRA-CHAVE
+\end{resumoumacoluna}
+
+\textual
+% ----------------------------------------------------------
+% Introdução
+% ----------------------------------------------------------
+\section*{Introdução}
+\addcontentsline{toc}{section}{Introdução}
+
+Paper \cite{fehrman2015}
+
+% ----------------------------------------------------------
+% Cap. 1
+% ----------------------------------------------------------
+\section{Cap. 1}
+
+\lipsum[2]
+
+\subsection{Sec. 1.1}
+
+\lipsum[3]
+
+\subsection{Sec. 1.2}
+
+\lipsum[4]
+
+% ----------------------------------------------------------
+% Cap. 2
+% ----------------------------------------------------------
+\section{Cap. 2}
+
+\lipsum[5]
+
+\section{Cap. 3}
+
+\lipsum[6]
+
+\section{Cap. 4}
+
+\lipsum[7]
+
+% ---
+% Finaliza a parte no bookmark do PDF, para que se inicie o bookmark na raiz
+% ---
+\bookmarksetup{startatroot}% 
+
+% ----------------------------------------------------------
+% Conclusão
+% ----------------------------------------------------------
+\section*{Considerações finais}
+\addcontentsline{toc}{section}{Considerações finais}
+
+\lipsum[8]
+
+\begin{citacao}
+\lipsum[9]
+\end{citacao}
+
+\lipsum[10]
+
+% ----------------------------------------------------------
+% Referências bibliográficas
+% ----------------------------------------------------------
+\bibliography{referencias}
+
+% ----------------------------------------------------------
+% Glossário
+% ----------------------------------------------------------
+%
+% Há diversas soluções prontas para glossário em LaTeX. 
+% Consulte o manual do abnTeX2 para obter sugestões.
+%
+%\glossary
+
+% ----------------------------------------------------------
+% Apêndices
+% ----------------------------------------------------------
+%
+%\begin{apendicesenv}
+%
+% ----------------------------------------------------------
+%\chapter{Apêndice}
+% ----------------------------------------------------------
+%\lipsum[55-57]
+%
+%\end{apendicesenv}
+
+% ----------------------------------------------------------
+% Anexos
+% ----------------------------------------------------------
+%\cftinserthook{toc}{AAA}
+%\anexos
+%\begin{anexosenv}
+%
+%\chapter{Anexo}
+%
+%\lipsum[31]
+%\end{anexosenv}
+
+\end{document}
