@@ -306,5 +306,4 @@ nm = rownames(cf)[cf[,1] != 0]
 nm
 round(cf[nm,],4)
 
-vars = paste("V",c(1,10,20,50,90), sep = "")
 sum(vars %in% nm)

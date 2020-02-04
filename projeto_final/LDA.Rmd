@@ -1,0 +1,141 @@
+---
+title: "Trabalho Final - LDA"
+output: html_notebook
+---
+
+Carregando os dados e criando as categorias de drogas pré definidas pelo grupo:
+
+```{r}
+data <- readxl::read_xlsx("drug_consumption_dataset.xlsx")
+head(data)
+
+data <- transform(data, light_drugs = ifelse(
+  ((Alcohol == "Never Used" | Alcohol == "Used over a Decade Ago") &
+     (Caff == "Never Used" | Caff == "Used over a Decade Ago") &
+     (Nicotine == "Never Used" | Nicotine == "Used over a Decade Ago") &
+     (Choc == "Never Used" | Choc == "Used over a Decade Ago")), "No", "Yes"))
+
+data <- transform(data, medium_drugs = ifelse(
+  ((Cokes == "Never Used" | Cokes == "Used over a Decade Ago") &
+     (Ecstasy == "Never Used" | Ecstasy == "Used over a Decade Ago") &
+     (LSD == "Never Used" | LSD == "Used over a Decade Ago") &
+     (Mushrooms == "Never Used" | Mushrooms == "Used over a Decade Ago")), "No", "Yes"))
+
+data <- transform(data, heavy_drugs = ifelse(
+  ((Amphet == "Never Used" | Amphet == "Used over a Decade Ago") &
+     (Crack == "Never Used" | Crack == "Used over a Decade Ago") &
+     (Heroin == "Never Used" | Heroin == "Used over a Decade Ago") &
+     (VSA == "Never Used" | VSA == "Used over a Decade Ago")), "No", "Yes"))
+
+
+head(data)
+table(data$light_drugs)
+table(data$medium_drugs)
+table(data$heavy_drugs)
+
+```
+
+
+```{r}
+summary(data)
+```
+
+Vamos começar com medium drugs que é o que tem praticamente meio a meio de respostas:
+
+```{r}
+table(data$Age)
+table(data$Country)
+```
+
+
+```{r}
+install.packages("ggplot2")
+library(ggplot2)
+country_filter_data <- data[data$Country %in% c("UK", "USA", "Canada"),]
+ggplot(country_filter_data, aes(x = medium_drugs, y = NScore, fill = medium_drugs)) +   geom_boxplot(size = .75) +   facet_grid(Country ~ Gender, margins = FALSE) +   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+Primeira tentativa de ajuste de modelo na LDA usando **lda** do pacote **MASS**. 
+
+```{r}
+#install.packages("MASS")
+library(MASS)
+data$medium_drugs <- as.factor(data$medium_drugs)
+model_fit <- lda(medium_drugs~Ethnicity+Education+Country+Age+Gender+NScore+EScore+OScore+AScore+CScore+Impulsive+SS+light_drugs, data = data)
+model_fit
+
+```
+
+Testando o modelo:
+
+```{r}
+new_data <- data.frame("Age"= "25-34","Education"="Masters degree","Country"="Other","Gender"="Female","NScore"=30, "EScore"=55, "OScore"=50, "AScore"=60, "CScore"=60, "Impulsive"= 0.19268, "SS"= -0.84637, light_drugs="Yes", "Ethnicity"="White")
+
+pred = predict(model_fit, new_data)
+pred
+```
+
+Nosso modelo previu que a pessoa com as caracteristicas acima seria um nao usuario de drogas medias. Igual a reg logistica.
+
+Agora vamos fazer o modelo com treinamento e teste, e ver a matriz de confusao para avaliar o metodo:
+
+Primeiro, dividir os dados:
+```{r}
+# Funcao para dividir dados aleatoriamente em treinamento e teste #
+split_data = function(data, train_perc){
+  train_size <- floor(train_perc * nrow(data))
+  train_index <- sample(seq_len(nrow(data)), size = train_size)
+  train <- data[train_index, ]
+  test <- data[-train_index, ]
+  return(list("train" = train,
+              "test" = test))
+}
+
+set.seed(205650)
+splitted_data <- split_data(data, 0.85)
+train <- splitted_data$train
+test <- splitted_data$test
+
+```
+
+Rodar o modelo para o set de treinamento:
+```{r}
+model_fit <- lda(medium_drugs~Ethnicity+Education+Country+Age+Gender+NScore+EScore+OScore+AScore+CScore+Impulsive+SS+light_drugs, data = data)
+```
+
+Fazer a predicao com o modelo de teste: 
+
+```{r}
+pred <- predict(model_fit, test)
+names(pred)
+```
+
+Matriz de confusao:
+
+```{r}
+table(pred$class, test$medium_drugs)
+
+pred$class[1]
+test$medium_drugs[1]
+
+```
+
+
+Usando a lib caret: 
+
+```{r}
+#install.packages('caret')
+install.packages('ISLR')
+install.packages('e1071', dependencies=TRUE)
+
+library(caret)
+library(ISLR)
+
+modelFit<- train(medium_drugs~Education+Country+Age+Gender+NScore+EScore+OScore+AScore+CScore+Impulsive+SS, method='lda',preProcess=c('scale', 'center'), data=train)
+
+confusionMatrix(test$medium_drugs, predict(modelFit, test))
+
+
+```
+
+Tivemos aprox 70% afccuracy. Parecido com regressao logistica.

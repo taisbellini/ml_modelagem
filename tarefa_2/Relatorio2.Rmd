@@ -455,6 +455,7 @@ library(knitr)
 kable(hits_count, caption='Acertos exatos e parciais para tamanho de amostra 200')
 ```
 
+Com tamanho de amostra maior, ele se aproxima do MQO. Precisao de beta é inversamente proporcional a variância.
 
 ## Alterando as variáveis resposta
 
@@ -563,3 +564,5 @@ kable(hits_count, caption='Acertos exatos e parciais para cada tamanho de k')
 
 
 Observamos que com as variáveis corretas sendo $X_{1},X_{2},X_{3},X_{4},X_{5}$ o modelo LASSO não acerta as variáveis verdadeiras, apesar de incluí-las em todas as repetições. Acredito que a natureza Normal da distribuição das variáveis e do $\epsilon$ possam ter influência neste resultado.
+
+Na verdade é a variância que interfere.
