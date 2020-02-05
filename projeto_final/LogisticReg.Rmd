@@ -188,7 +188,7 @@ head(data)
 
 
 ```{r}
-modLog = glm(medium_drugs ~Gender+Education+NScore+EScore+OScore+AScore+CScore, data=train, family="binomial")
+modLog = glm(medium_drugs ~Age+Gender+Education+NScore+EScore+OScore+AScore+CScore, data=train, family="binomial")
 
 summary(modLog)
 
@@ -240,3 +240,42 @@ conf_matrix<-table(predicted_values,actual_values)
 conf_matrix
 ```
 
+
+Usando scores em categorias:
+
+```{r}
+data2 <- readxl::read_xlsx("drug__tratado.xlsx")
+head(data2)
+```
+
+```{r}
+splitted2 <- split_data(data2, 0.75)
+test2 <- splitted2$test
+train2 <- splitted2$train
+modLog2 = glm(Grupo2~Age+Gender+Education+Nscore_cat+EScore_cat+OScore_cat+AScore_cat+CScore_cat, data=train2, family="binomial")
+
+summary(modLog2)
+
+```
+
+```{r}
+
+pred = predict(modLog2, newdata=test2, type="response")
+table(test2$Grupo2, as.numeric(pred >= 0.5))
+```
+
+Accuracy:
+```{r}
+(227+123)/nrow(test2)
+```
+
+Ficou melhor com as categorias em grupos
+
+```{r}
+123/(123+63)
+```
+
+```{r}
+227/(227+59)
+
+```
