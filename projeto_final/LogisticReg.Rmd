@@ -27,8 +27,6 @@ data <- transform(data, heavy_drugs = ifelse(
      (Heroin == "Never Used" | Heroin == "Used over a Decade Ago") &
      (VSA == "Never Used" | VSA == "Used over a Decade Ago")), "No", "Yes"))
 
-#teste
-
 head(data)
 table(data$light_drugs)
 table(data$medium_drugs)

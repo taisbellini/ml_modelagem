@@ -35,12 +35,14 @@ head(dados)
 
 mtcars.pca <- prcomp(dados, center = TRUE,scale. = TRUE)
 summary(mtcars.pca)
+
 # Componentes 1 e 2 explicam 0.62+0.23 % da variabilidade!!
 
 # Checando...
 DD = svd(as.matrix(scale(dados, center=TRUE)))
 round(DD$v,2)
 round(mtcars.pca$rotation,2)
+
 
 
 # plotando f?cil e bonito!
@@ -96,14 +98,13 @@ legend("topright",legend=c("Jap?o","Europa", "EUA"), pch=c(1,22,24), bty="n" )
 points(km$centers, pch=18, cex=2)
 
 
-
-
 # Condi??o inicial
 
 centros.ini=rbind(c(50,20),c(300,30))
 pchs=(mtcars.country=="Japan")*1  +(mtcars.country=="Europe")*22  +(mtcars.country=="US")*24
 
 plot(dados[,c("hp","mpg")], pch=pchs,cex=2)
+
 legend("topright",legend=c("Jap?o","Europa", "EUA"), pch=c(1,22,24), bty="n" )
 points(centros.ini, pch="0")
 
@@ -116,6 +117,7 @@ plot(dados[,c("hp","mpg")],
      col=cores, 
      pch=pchs,
      cex=2)
+
 legend("topright",legend=c("Jap?o","Europa", "EUA"), pch=c(1,22,24), bty="n" )
 points(centros.ini, pch="0")
 points(km1$centers, pch="1")
@@ -130,6 +132,7 @@ plot(dados[,c("hp","mpg")],
      col=cores, 
      pch=pchs,
      cex=2)
+
 legend("topright",legend=c("Jap?o","Europa", "EUA"), pch=c(1,22,24), bty="n" )
 points(centros.ini, pch="0")
 points(km1$centers, pch="1")
@@ -151,7 +154,8 @@ plot(mtcars.pca$x,
      col=cores, 
      pch=pchs,
      cex=2)
-legend(x=-4 ,y=5, ncol=3,legend=c("Jap?o","Europa", "EUA"), pch=c(1,22,24), bty="n", cex=1.2 )
-points(km.pca$centers, pch=18, cex=2)
 
+legend(x=-4 ,y=5, ncol=3,legend=c("Jap?o","Europa", "EUA"), pch=c(1,22,24), bty="n", cex=1.2 )
+
+points(km.pca$centers, pch=18, cex=2)
 
