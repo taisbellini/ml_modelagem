@@ -182,7 +182,63 @@ correct/total
 - Modificar o banco para usar variaveis dummy
 - Remover Imp e SS
 
-  
+Usando glm:
+
+```{r}
+head(data)
+```
 
 
+```{r}
+modLog = glm(medium_drugs ~Gender+Education+NScore+EScore+OScore+AScore+CScore, data=train, family="binomial")
+
+summary(modLog)
+
+
+```
+
+Variaveis significativas: EScore, OScore, AScore, CScore
+
+
+```{r}
+modLog = glm(medium_drugs ~OScore+AScore+CScore, data=train, family="binomial")
+
+summary(modLog)
+
+```
+
+```{r}
+pred = predict(modLog, newdata=test, type="response")
+table(test$medium_drugs, as.numeric(pred >= 0.5))
+
+```
+Accuracy:
+```{r}
+(84 + 115)/ nrow(test)
+```
+
+Sensitivity: 
+```{r}
+115/(115+31)
+```
+
+Specificity:
+```{r}
+84 / (84+53)
+```
+```{r}
+table(test$medium_drugs)
+
+```
+```{r}
+137/(137+146)
+```
+
+```{r}
+threshold=0.2
+predicted_values<-ifelse(predict(modLog,type="response")>threshold,1,0)
+actual_values<- modLog$y
+conf_matrix<-table(predicted_values,actual_values)
+conf_matrix
+```
 

@@ -137,4 +137,7 @@ confusionMatrix(test$medium_drugs, predict(modelFit, test))
 
 ```
 
-Tivemos aprox 70% afccuracy. Parecido com regressao logistica.
+Tivemos aprox 70% accuracy. Parecido com regressao logistica.
+
+LDA é sensivel a pontos discrepantes, pois usa médias. SVM por ex, é mais robusto, pois só usa informação das margens. 
+
