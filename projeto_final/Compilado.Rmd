@@ -2,6 +2,7 @@
 title: "Trabalho Final - Compilado de Métodos"
 output: html_notebook
 ---
+# Introdução
 
 Carregando os dados:
 
@@ -82,3 +83,8 @@ train <- splitted_data$train
 test <- splitted_data$test
 
 ```
+
+# Métodos de Classificação
+
+to do: adicionar métodos de classificação
+to do? adicionar clusterização?
