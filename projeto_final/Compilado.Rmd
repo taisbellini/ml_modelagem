@@ -4,6 +4,8 @@ output: html_notebook
 ---
 # Introdução
 
+$~$
+
 Carregando os dados:
 
 ```{r}
@@ -11,6 +13,8 @@ data <- readxl::read_xlsx("drug_consumption_dataset.xlsx")
 head(data)
 
 ```
+
+$~$
 
 Excluindo as variáveis não relevantes para a análise:
 
@@ -20,6 +24,8 @@ data$SS <- NULL
 head(data)
 
 ```
+
+$~$
 
 Convertando os Scores em Categorias:
 
@@ -50,8 +56,9 @@ head(data)
 
 ```
 
-Introdução de variáveis dummy:
+$~$
 
+Introdução de variáveis dummy:
 ```{r}
 install.packages("fastDummies")
 library(fastDummies)
@@ -62,8 +69,9 @@ data_dummy$medium_drugs_Yes <- NULL
 data_dummy = data.frame(data_dummy, medium_drugs)
 ```
 
-Divisão dos dados entre treino e teste:
+$~$
 
+Divisão dos dados entre treino e teste:
 ```{r}
 install.packages("MASS")
 library(MASS)
@@ -84,7 +92,9 @@ test <- splitted_data$test
 
 ```
 
-# Métodos de Classificação
+$~$
 
-to do: adicionar métodos de classificação
+# TO DO: Métodos de Classificação
+
+to do: adicionar métodos de classificação  
 to do? adicionar clusterização?
