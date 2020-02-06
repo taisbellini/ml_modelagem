@@ -1,0 +1,84 @@
+---
+title: "Trabalho Final - Compilado de Métodos"
+output: html_notebook
+---
+
+Carregando os dados:
+
+```{r}
+data <- readxl::read_xlsx("drug_consumption_dataset.xlsx")
+head(data)
+
+```
+
+Excluindo as variáveis não relevantes para a análise:
+
+```{r}
+data$Impulsive <- NULL
+data$SS <- NULL
+head(data)
+
+```
+
+Convertando os Scores em Categorias:
+
+```{r}
+scores = c("NScore", "EScore", "OScore", "AScore", "CScore")
+
+for(col in scores){
+  for (row in 1:nrow(data)){
+    if(data[row, col] < 35){
+      data[row, col] = "Very Low"
+    }
+    else if(data[row, col] < 45){
+      data[row, col] = "Low"
+    }
+    else if(data[row, col] < 55){
+      data[row, col] = "Average"
+    }
+    else if(data[row, col] < 65){
+      data[row, col] = "High"
+    }
+    else {
+      data[row, col] = "Very High"
+    }
+  }
+}
+
+head(data)
+
+```
+
+Introdução de variáveis dummy:
+
+```{r}
+install.packages("fastDummies")
+library(fastDummies)
+medium_drugs <- data$medium_drugs
+data_dummy <- dummy_cols(data, remove_selected_columns = TRUE)
+data_dummy$medium_drugs_No <- NULL
+data_dummy$medium_drugs_Yes <- NULL
+data_dummy = data.frame(data_dummy, medium_drugs)
+```
+
+Divisão dos dados entre treino e teste:
+
+```{r}
+install.packages("MASS")
+library(MASS)
+# Funcao para dividir dados aleatoriamente em treinamento e teste #
+split_data = function(data, train_perc){
+  train_size <- floor(train_perc * nrow(data))
+  train_index <- sample(seq_len(nrow(data)), size = train_size)
+  train <- data[train_index, ]
+  test <- data[-train_index, ]
+  return(list("train" = train,
+              "test" = test))
+}
+
+set.seed(205650)
+splitted_data <- split_data(data, 0.85)
+train <- splitted_data$train
+test <- splitted_data$test
+
+```

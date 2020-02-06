@@ -27,9 +27,6 @@ data <- transform(data, heavy_drugs = ifelse(
      (Heroin == "Never Used" | Heroin == "Used over a Decade Ago") &
      (VSA == "Never Used" | VSA == "Used over a Decade Ago")), "No", "Yes"))
 
-#teste
-#teste_git
-
 head(data)
 table(data$light_drugs)
 table(data$medium_drugs)
@@ -56,7 +53,7 @@ Já fizemos essas mesmas etapas utilizando Logistic Regression e LDA. Vamos agor
 Primeiro, vamos introduzir variáveis dummy.
 
 ```{r}
-#install.packages("fastDummies")
+install.packages("fastDummies")
 library(fastDummies)
 medium_drugs <- data$medium_drugs
 data_dummy <- dummy_cols(data, remove_selected_columns = TRUE)
