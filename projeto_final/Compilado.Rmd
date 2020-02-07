@@ -19,10 +19,8 @@ $~$
 Excluindo as variáveis não relevantes para a análise:
 
 ```{r}
-data$Impulsive <- NULL
-data$SS <- NULL
-head(data)
-
+data <- subset(data, select=-c(Impulsive, SS))
+head(data) 
 ```
 
 $~$
@@ -53,28 +51,65 @@ for(col in scores){
 }
 
 head(data)
-
 ```
 
 $~$
 
-Introdução de variáveis dummy:
+Classificando os usuários e não-usuários das drogas escolhidas de acordo com o que foi previamente definido pelo grupo:
+
+Não usuário: {Never Used, Used Over a Decade ago, Used in the Last Decade}
+Usuário: {Used in Last Year, Used in Last Month, Used in Last Week, Used in Last Day}
+
+Drogas a serem analisadas: Alcool, Ecstasy, Cannabis, Estimulantes: {Cokes, Crack, Anfetamina}
+
+```{r}
+data <- transform(data, alcohol_user = 
+                    ifelse((Alcohol == "Never Used" | 
+                              Alcohol == "Used over a Decade Ago" | 
+                              Alcohol == "Used in Last Decade"), 0, 1))
+
+data <- transform(data, ecstasy_user = 
+                    ifelse((Ecstasy == "Never Used" | 
+                              Ecstasy == "Used over a Decade Ago" | 
+                              Ecstasy == "Used in Last Decade"), 0, 1))
+
+
+data <- transform(data, cannabis_user = 
+                    ifelse((Cannabis == "Never Used" | 
+                              Cannabis == "Used over a Decade Ago" | 
+                              Cannabis == "Used in Last Decade"), 0, 1))
+
+
+data <- transform(data, stimulating_user = 
+                    ifelse((
+                      (Cokes == "Never Used" | 
+                         Cokes == "Used over a Decade Ago" | 
+                         Cokes == "Used in Last Decade") &
+                        (Crack == "Never Used" | 
+                           Crack == "Used over a Decade Ago" | 
+                           Crack == "Used in Last Decade") &
+                        (Amphet == "Never Used" | 
+                           Amphet == "Used over a Decade Ago" | 
+                           Amphet == "Used in Last Decade")), 0, 1))
+head(data)
+```
+
+$~$
+
+Introdução de variáveis dummy caso o modelo precise:
 ```{r}
 install.packages("fastDummies")
 library(fastDummies)
-medium_drugs <- data$medium_drugs
+
 data_dummy <- dummy_cols(data, remove_selected_columns = TRUE)
-data_dummy$medium_drugs_No <- NULL
-data_dummy$medium_drugs_Yes <- NULL
-data_dummy = data.frame(data_dummy, medium_drugs)
+head(data_dummy)
 ```
 
 $~$
 
 Divisão dos dados entre treino e teste:
 ```{r}
-install.packages("MASS")
-library(MASS)
+
 # Funcao para dividir dados aleatoriamente em treinamento e teste #
 split_data = function(data, train_perc){
   train_size <- floor(train_perc * nrow(data))
@@ -85,6 +120,7 @@ split_data = function(data, train_perc){
               "test" = test))
 }
 
+#usage: 
 set.seed(205650)
 splitted_data <- split_data(data, 0.85)
 train <- splitted_data$train
