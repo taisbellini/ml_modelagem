@@ -27,7 +27,7 @@ data <- transform(data, EScore_cat = ifelse(EScore_cat == 9, 1, EScore_cat))
 data <- transform(data, AScore_cat = ifelse(AScore_cat == 9, 1, AScore_cat))
 data <- transform(data, CScore_cat = ifelse(CScore_cat == 9, 1, CScore_cat))
 
-data.to.cluster <- as.data.frame(data[, c("Age", "Education", "Nscore_cat", "EScore_cat", "AScore_cat", "CScore_cat", "OScore_cat", "LSD", "Ecstasy", "Crack", "Heroin", "Cokes", "Cannabis")])
+data.to.cluster <- as.data.frame(data[, c("Age", "Education","Gender", "Nicotine")])
 
 data.to.cluster$Age <- as.factor(data.to.cluster$Age)
 data.to.cluster$Education <- as.factor(data.to.cluster$Education)
@@ -37,7 +37,7 @@ data.to.cluster$Crack <- as.factor(data.to.cluster$Crack)
 data.to.cluster$Cokes <- as.factor(data.to.cluster$Cokes)
 data.to.cluster$Heroin <- as.factor(data.to.cluster$Heroin)
 data.to.cluster$Cannabis <- as.factor(data.to.cluster$Cannabis)
-
+data.to.cluster$Nicotine <- as.factor(data.to.cluster$Nicotine)
 ```
 
 KMODES: variacao do k-means para variaveis categoricas.
@@ -57,10 +57,15 @@ km$modes
 km.data <- cbind(data.to.cluster, km$cluster)
 ```
 
-Separando em 2, temos apenas Ecstasy com uma boa separacao: USed in Last Year, Never Used. As outras drogas ficaram com Never Used em ambos clusters.
+Separando em 2, temos apenas Ecstasy com uma boa separacao: Used in Last Year, Never Used. As outras drogas ficaram com Never Used em ambos clusters.
 
 ```{r}
-plot(km.data[,c("OScore_cat","Ecstasy")], col=km$cluster)
+plot(km.data[,"Nicotine"], col=km$cluster)
+
+clust <- km.data[,c("Nicotine","km$cluster")]
+
+table(clust)
+
 ```
 
 Lets do 3: 
@@ -71,6 +76,17 @@ str(km.3modes)
 km.3modes$modes
 ```
 
+
+```{r}
+km.3modes.data <- cbind(data.to.cluster, km.3modes$cluster)
+
+plot(km.3modes.data[,"Nicotine"], col=km.3modes$cluster)
+
+clust.3modes <- km.3modes.data[,c("Nicotine","km.3modes$cluster")]
+
+table(clust.3modes)
+
+```
 
 Separando em 3 temos consistencia para as drogas selecionadas de 3 categorias: 
 
