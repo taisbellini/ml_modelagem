@@ -87,3 +87,10 @@ library(cba)
 rock <-rockCluster(as.matrix(data.to.cluster), 2, debug=TRUE)
 ```
 
+
+Hierarquical: 
+https://towardsdatascience.com/hierarchical-clustering-on-categorical-data-in-r-a27e578f2995
+
+
+
+
