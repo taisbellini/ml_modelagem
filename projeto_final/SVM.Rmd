@@ -1,0 +1,77 @@
+---
+title: "Trabalho Final - SVM"
+output: html_notebook
+---
+
+Carregando os dados e criando as categorias de drogas pré definidas pelo grupo:
+
+```{r}
+data <- readxl::read_xlsx("drug_consumption_dataset.xlsx")
+head(data)
+
+data <- transform(data, light_drugs = ifelse(
+  ((Alcohol == "Never Used" | Alcohol == "Used over a Decade Ago") &
+     (Caff == "Never Used" | Caff == "Used over a Decade Ago") &
+     (Nicotine == "Never Used" | Nicotine == "Used over a Decade Ago") &
+     (Choc == "Never Used" | Choc == "Used over a Decade Ago")), "No", "Yes"))
+
+data <- transform(data, medium_drugs = ifelse(
+  ((Cokes == "Never Used" | Cokes == "Used over a Decade Ago") &
+     (Ecstasy == "Never Used" | Ecstasy == "Used over a Decade Ago") &
+     (LSD == "Never Used" | LSD == "Used over a Decade Ago") &
+     (Mushrooms == "Never Used" | Mushrooms == "Used over a Decade Ago")), "No", "Yes"))
+
+data <- transform(data, heavy_drugs = ifelse(
+  ((Amphet == "Never Used" | Amphet == "Used over a Decade Ago") &
+     (Crack == "Never Used" | Crack == "Used over a Decade Ago") &
+     (Heroin == "Never Used" | Heroin == "Used over a Decade Ago") &
+     (VSA == "Never Used" | VSA == "Used over a Decade Ago")), "No", "Yes"))
+
+
+head(data)
+table(data$light_drugs)
+table(data$medium_drugs)
+table(data$heavy_drugs)
+
+```
+
+Separando Treino e Teste:
+
+```{r}
+# Funcao para dividir dados aleatoriamente em treinamento e teste #
+split_data = function(data, train_perc){
+  train_size <- floor(train_perc * nrow(data))
+  train_index <- sample(seq_len(nrow(data)), size = train_size)
+  train <- data[train_index, ]
+  test <- data[-train_index, ]
+  return(list("train" = train,
+              "test" = test))
+}
+
+set.seed(205650)
+splitted_data <- split_data(data, 0.85)
+train <- splitted_data$train
+test <- splitted_data$test
+
+```
+
+Usando três variações de SVM do Caret e testando para Medium Drugs:
+
+```{r}
+install.packages('caret')
+
+library(caret)
+
+#L2 Regularized Support Vector Machine (dual) with Linear Kernel >>> method = 'svmLinear3'
+#modelFit<- train(medium_drugs~Education+Country+Age+Gender+NScore+EScore+OScore+AScore+CScore+Impulsive+SS, method='svmLinear3',preProcess=c('scale', 'center'), data=train)
+
+#L2 Regularized Linear Support Vector Machines with Class Weights >>> method = 'svmLinearWeights2'
+#modelFit<- train(medium_drugs~Education+Country+Age+Gender+NScore+EScore+OScore+AScore+CScore+Impulsive+SS, method='svmLinearWeights2',preProcess=c('scale', 'center'), data=train)
+
+#Linear Support Vector Machines with Class Weights >>> method = 'svmLinearWeights'
+modelFit<- train(medium_drugs~Education+Country+Age+Gender+NScore+EScore+OScore+AScore+CScore+Impulsive+SS, method='svmLinearWeights',preProcess=c('scale', 'center'), data=train)
+
+confusionMatrix(test$medium_drugs, predict(modelFit, test))
+```
+
+Accuracy de aprox 78% para os três métodos
