@@ -1,0 +1,89 @@
+---
+title: "Clustering analysis"
+output: html_notebook
+---
+
+Reference: 
+https://dabblingwithdata.wordpress.com/2016/10/10/clustering-categorical-data-with-r/
+
+
+Install necessary packages: 
+```{r}
+install.packages("klaR")
+install.packages("cba")
+
+```
+
+Prepare data: 
+
+```{r}
+raw_data <- readxl::read_xlsx("drug__tratado.xlsx")
+head(raw_data)
+
+data <- subset(raw_data, select=-c(Ethnicity_white, Ethnicity_Asian, Ethnicity_Black, Ethnicity_Mixed, Ethnicity_Other, age_cat1, age_cat2, age_cat3, age_cat4, age_cat5, age_cat6, Gender_fem, Gender_male, Education_before16, Education_left16, Education_left17, Education_left18, Education_professional, Education_some, Education_university, Education_doctor, Education_masters, Country_usa, Country_uk, Country_other))
+
+data <- transform(data, Nscore_cat = ifelse(Nscore_cat == 9, 1, Nscore_cat))
+data <- transform(data, EScore_cat = ifelse(EScore_cat == 9, 1, EScore_cat))
+data <- transform(data, AScore_cat = ifelse(AScore_cat == 9, 1, AScore_cat))
+data <- transform(data, CScore_cat = ifelse(CScore_cat == 9, 1, CScore_cat))
+
+data.to.cluster <- as.data.frame(data[, c("Age", "Education", "Nscore_cat", "EScore_cat", "AScore_cat", "CScore_cat", "OScore_cat", "LSD", "Ecstasy", "Crack", "Heroin", "Cokes", "Cannabis")])
+
+data.to.cluster$Age <- as.factor(data.to.cluster$Age)
+data.to.cluster$Education <- as.factor(data.to.cluster$Education)
+data.to.cluster$LSD <- as.factor(data.to.cluster$LSD)
+data.to.cluster$Ecstasy <- as.factor(data.to.cluster$Ecstasy)
+data.to.cluster$Crack <- as.factor(data.to.cluster$Crack)
+data.to.cluster$Cokes <- as.factor(data.to.cluster$Cokes)
+data.to.cluster$Heroin <- as.factor(data.to.cluster$Heroin)
+data.to.cluster$Cannabis <- as.factor(data.to.cluster$Cannabis)
+
+```
+
+KMODES: variacao do k-means para variaveis categoricas.
+http://www.cs.ust.hk/~qyang/Teaching/537/Papers/huang98extensions.pdf
+Começando com 2 clusters: 
+
+```{r}
+library(klaR)
+
+km <- kmodes(data.to.cluster, 2, iter.max = 10, weighted = FALSE )
+str(km)
+```
+
+```{r}
+km$modes
+
+km.data <- cbind(data.to.cluster, km$cluster)
+```
+
+Separando em 2, temos apenas Ecstasy com uma boa separacao: USed in Last Year, Never Used. As outras drogas ficaram com Never Used em ambos clusters.
+
+```{r}
+plot(km.data[,c("OScore_cat","Ecstasy")], col=km$cluster)
+```
+
+Lets do 3: 
+
+```{r}
+km.3modes <- kmodes(data.to.cluster, 3, iter.max = 10, weighted = FALSE )
+str(km.3modes)
+km.3modes$modes
+```
+
+
+Separando em 3 temos consistencia para as drogas selecionadas de 3 categorias: 
+
+Never Used, Used in Last Decade. 
+
+
+ROCK ALGORITHM
+http://www.inf.ed.ac.uk/teaching/courses/dme/studpres/Rock.pdf
+
+nao funcionou.
+
+```{r}
+library(cba)
+rock <-rockCluster(as.matrix(data.to.cluster), 2, debug=TRUE)
+```
+
