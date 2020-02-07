@@ -105,6 +105,15 @@ data_dummy <- dummy_cols(data, remove_selected_columns = TRUE)
 head(data_dummy)
 ```
 
+Exportando os dados: 
+
+```{r}
+write.csv2(data, file="drug_use_data.csv")
+write.csv2(data_dummy, file="drug_use_data_dummy.csv")
+```
+
+
+
 $~$
 
 Divisão dos dados entre treino e teste:
