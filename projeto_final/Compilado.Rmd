@@ -6,21 +6,20 @@ output: html_notebook
 
 $~$
 
+Instalar pacotes necessários: 
+
+```{r}
+install.packages("fastDummies")
+```
+
+$~$
+
 Carregando os dados:
 
 ```{r}
 data <- readxl::read_xlsx("drug_consumption_dataset.xlsx")
 head(data)
 
-```
-
-$~$
-
-Excluindo as variáveis não relevantes para a análise:
-
-```{r}
-data <- subset(data, select=-c(Impulsive, SS))
-head(data) 
 ```
 
 $~$
@@ -33,7 +32,7 @@ scores = c("NScore", "EScore", "OScore", "AScore", "CScore")
 for(col in scores){
   for (row in 1:nrow(data)){
     if(data[row, col] < 35){
-      data[row, col] = "Very Low"
+      data[row, col] = "VeryLow"
     }
     else if(data[row, col] < 45){
       data[row, col] = "Low"
@@ -45,7 +44,7 @@ for(col in scores){
       data[row, col] = "High"
     }
     else {
-      data[row, col] = "Very High"
+      data[row, col] = "VeryHigh"
     }
   }
 }
@@ -96,12 +95,23 @@ head(data)
 
 $~$
 
+Excluindo as variáveis não relevantes para a análise:
+
+```{r}
+dataTemp <- data[,33:36]
+data <- cbind(data[1:11], dataTemp)
+head(data) 
+```
+
+$~$
+
 Introdução de variáveis dummy caso o modelo precise:
 ```{r}
-install.packages("fastDummies")
 library(fastDummies)
 
 data_dummy <- dummy_cols(data, remove_selected_columns = TRUE)
+head(data_dummy)
+names(data_dummy) <- make.names(names(data_dummy), unique = TRUE)
 head(data_dummy)
 ```
 
@@ -111,7 +121,6 @@ Exportando os dados:
 write.csv2(data, file="drug_use_data.csv")
 write.csv2(data_dummy, file="drug_use_data_dummy.csv")
 ```
-
 
 
 $~$
