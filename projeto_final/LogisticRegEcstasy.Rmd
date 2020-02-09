@@ -39,10 +39,17 @@ fullModLog <- train(
   family = "binomial"
 )
 
-fullModLog
-names(fullModLog)
-fullModLog$results
-fullModLog$finalModel
+fullModLog <- glm(ecstasy_user ~ ., data=trainLogEcstasy, family = "binomial")
+
+stepEcstasy <- stepAIC(fullModLog, direction = "both")
+stepEcstasy$anova
+stepEcstasy$model
+names(stepEcstasy)
+
+pred <- predict(stepEcstasy, testLog)
+
+confusionMatrix(pred, testLog$ecstasy_user)
+
 ```
 
 ```{r}
@@ -52,7 +59,7 @@ calc_acc = function(actual, predicted) {
 }
 
 calc_acc(actual = testLog$ecstasy_user,
-         predicted = predict(fullModLog, newdata = testLog))
+         predicted = predict(stepEcstasy, newdata = testLog))
 
 ```
 
