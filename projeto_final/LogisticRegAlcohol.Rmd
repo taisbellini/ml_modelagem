@@ -1,0 +1,96 @@
+---
+title: "Trabalho Final - Regressao Logistica"
+output: html_notebook
+---
+
+
+## Alcohol
+
+-> primeiro rodar os chunks do Compilado
+
+Colocando os dados em variaveis especificas para o experimento:
+
+```{r}
+dataLog <- data
+```
+
+Separar em treino e teste usando o create data partition que garante distribuicoes similares:
+
+```{r}
+set.seed(205650)
+indexes <- createDataPartition(dataLog$alcohol_user, p = 0.85, list = FALSE)
+trainLog = dataLog[indexes, ]
+testLog = dataLog[-indexes, ]
+```
+
+Rodando o glm full model:
+```{r}
+library(caret)
+trainLogAlcohol <- subset(trainLog, select = -c(ID, ecstasy_user, cannabis_user, stimulating_user))
+
+#varLog <- paste(varLog, collapse = "+")
+#formula <- as.formula(paste("ecstasy_user ~ ", varLog))
+fullModLog <- glm(alcohol_user ~ ., data=trainLogAlcohol, family = "binomial")
+
+stepAlcohol <- stepAIC(fullModLog, direction = "both")
+stepAlcohol$anova
+```
+
+```{r}
+pred <- ifelse(predict(stepAlcohol, newdata = testLog) >= 0.5, 1, 0)
+
+confusionMatrix(table(pred, testLog$alcohol_user))
+```
+
+Agora, vamos usar glm com stepwise e tentar melhorar o modelo:
+
+```{r}
+library(caret)
+trainLogEcstasy <- subset(trainLog, select = -c(ID, alcohol_user, cannabis_user, stimulating_user))
+
+#varLog <- paste(varLog, collapse = "+")
+#formula <- as.formula(paste("ecstasy_user ~ ", varLog))
+stepModLog <- train(
+  form = ecstasy_user ~ .,
+  data = trainLogEcstasy,
+  trControl = trainControl(method = "boot", number= 5),
+  method = "glmStepAIC",
+  family = "binomial"
+)
+
+stepModLog$finalModel
+
+```
+
+77% using stepwise.
+
+Importancia das variaveis: 
+```{r}
+variableImportance <- varImp(fullModLog, useModel = TRUE , scale = FALSE)
+variableImportance
+```
+
+Rodando o modelo novamente agora somente com as variaveis Age, Gender, Country, EScore, OScore e Cscore:
+```{r}
+trainLogAlcohol$alcohol_user <- as.factor(trainLogAlcohol$alcohol_user)
+fullModLogFilter <- train(
+  form = alcohol_user ~ Age+Ethnicity+Country,
+  data = trainLogAlcohol,
+  trControl = trainControl(method = "boot", number= 100),
+  method = "glm",
+  family = "binomial"
+)
+
+fullModLogFilter
+```
+```{r}
+calc_acc(actual = testLog$alcohol_user,
+         predicted = predict(fullModLogFilter, newdata = testLog))
+```
+
+
+
+## Referencias
+http://www.sthda.com/english/articles/36-classification-methods-essentials/150-stepwise-logistic-regression-essentials-in-r/
+http://www.utstat.toronto.edu/~brunner/oldclass/appliedf11/handouts/2101f11StepwiseLogisticR.pdf
+https://machinelearningmastery.com/how-to-estimate-model-accuracy-in-r-using-the-caret-package/
