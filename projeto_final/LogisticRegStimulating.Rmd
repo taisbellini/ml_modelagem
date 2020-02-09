@@ -1,0 +1,85 @@
+---
+title: "Trabalho Final - Regressao Logistica"
+output: html_notebook
+---
+
+## Stimulating
+
+-> primeiro rodar os chunks do Compilado
+
+Colocando os dados em variaveis especificas para o experimento:
+
+```{r}
+dataLogStimulating <- data
+```
+
+Separar em treino e teste usando o create data partition que garante distribuicoes similares:
+
+```{r}
+set.seed(205650)
+indexes <- createDataPartition(dataLogStimulating$stimulating_user, p = 0.85, list = FALSE)
+trainLogStimulating = dataLogStimulating[indexes, ]
+testLogStimulating = dataLogStimulating[-indexes, ]
+```
+
+Rodando o glm full model:
+```{r}
+library(caret)
+trainLogStimulating <- subset(trainLogStimulating, select = -c(ID, alcohol_user, ecstasy_user, cannabis_user))
+
+
+fullModLogStimulating <- glm(stimulating_user ~ ., data=trainLogStimulating, family = "binomial")
+fullModLogStimulating
+
+
+predFullStimulating <- ifelse(predict(fullModLogStimulating, newdata = testLogStimulating) >= 0.5, 1, 0)
+confusionMatrix(table(predFullStimulating, testLogStimulating$stimulating_user))
+
+```
+
+Rodando com stepAIC:
+```{r}
+stepStimulating <- stepAIC(fullModLogStimulating, direction = "both")
+stepStimulating$anova
+
+predStepStimulating <- ifelse(predict(stepStimulating, newdata = testLogStimulating) >= 0.5, 1, 0)
+confusionMatrix(table(predStepStimulating, testLogStimulating$stimulating_user))
+
+```
+
+
+Importancia das variaveis: 
+```{r}
+variableImportance <- varImp(fullModLogStimulating , scale = FALSE)
+variableImportance
+```
+
+Rodando o modelo novamente agora somente com as variaveis Age + Gender + Country + Ethnicity + NScore + 
+    EScore + OScore + AScore + CScore:
+```{r}
+caretTrainLogStimulating <- trainLogStimulating
+caretTrainLogStimulating$stimulating_user <- as.factor(caretTrainLogStimulating$stimulating_user)
+fullModLogStimulatingFilter <- train(
+  form = stimulating_user ~ Age + Gender + Country + Ethnicity + NScore + 
+    EScore + OScore + AScore + CScore,
+  data = caretTrainLogStimulating,
+  trControl = trainControl(method = "boot", number= 100),
+  method = "glm",
+  family = "binomial"
+)
+
+fullModLogStimulatingFilter
+```
+
+
+```{r}
+predFilterStimulating <- predict(fullModLogStimulatingFilter, testLogStimulating)
+confusionMatrix(table(predFilterStimulating, testLogStimulating$stimulating_user))
+```
+
+
+
+## Referencias
+http://www.sthda.com/english/articles/36-classification-methods-essentials/150-stepwise-logistic-regression-essentials-in-r/
+http://www.utstat.toronto.edu/~brunner/oldclass/appliedf11/handouts/2101f11StepwiseLogisticR.pdf
+https://machinelearningmastery.com/how-to-estimate-model-accuracy-in-r-using-the-caret-package/

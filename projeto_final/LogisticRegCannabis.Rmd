@@ -1,0 +1,80 @@
+---
+title: "Trabalho Final - Regressao Logistica"
+output: html_notebook
+---
+
+## Cannabis
+
+-> primeiro rodar os chunks do Compilado
+
+Colocando os dados em variaveis especificas para o experimento:
+
+```{r}
+dataLogCannabis <- data
+```
+
+Separar em treino e teste usando o create data partition que garante distribuicoes similares:
+
+```{r}
+set.seed(205650)
+indexes <- createDataPartition(dataLogCannabis$cannabis_user, p = 0.85, list = FALSE)
+trainLogCannabis = dataLogCannabis[indexes, ]
+testLogCannabis = dataLogCannabis[-indexes, ]
+```
+
+Rodando o glm full model:
+```{r}
+library(caret)
+trainLogCannabis <- subset(trainLogCannabis, select = -c(ID, alcohol_user, ecstasy_user, stimulating_user))
+
+
+fullModLogCannabis <- glm(cannabis_user ~ ., data=trainLogCannabis, family = "binomial")
+fullModLogCannabis
+
+
+predFullCannabis <- ifelse(predict(fullModLogCannabis, newdata = testLogCannabis) >= 0.5, 1, 0)
+confusionMatrix(table(predFullCannabis, testLogCannabis$cannabis_user))
+
+
+stepCannabis <- stepAIC(fullModLogCannabis, direction = "both")
+stepCannabis$anova
+
+predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.5, 1, 0)
+confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
+
+```
+
+Importancia das variaveis: 
+```{r}
+variableImportance <- varImp(fullModLogCannabis , scale = FALSE)
+variableImportance
+```
+
+Rodando o modelo novamente agora somente com as variaveis Age, Gender, Country, EScore, OScore e Cscore:
+```{r}
+caretTrainLogCannabis <- trainLogCannabis
+caretTrainLogCannabis$cannabis_user <- as.factor(caretTrainLogCannabis$cannabis_user)
+fullModLogCannabisFilter <- train(
+  form = cannabis_user ~ Age + Gender + Education + Country + Ethnicity + 
+    OScore + CScore,
+  data = caretTrainLogCannabis,
+  trControl = trainControl(method = "boot", number= 100),
+  method = "glm",
+  family = "binomial"
+)
+
+fullModLogCannabisFilter
+```
+
+
+```{r}
+predFilterCannabis <- predict(fullModLogCannabisFilter, testLogCannabis)
+confusionMatrix(table(predFilterCannabis, testLogCannabis$cannabis_user))
+```
+
+
+
+## Referencias
+http://www.sthda.com/english/articles/36-classification-methods-essentials/150-stepwise-logistic-regression-essentials-in-r/
+http://www.utstat.toronto.edu/~brunner/oldclass/appliedf11/handouts/2101f11StepwiseLogisticR.pdf
+https://machinelearningmastery.com/how-to-estimate-model-accuracy-in-r-using-the-caret-package/
