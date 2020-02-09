@@ -10,6 +10,7 @@ Instalar pacotes necessários:
 
 ```{r}
 install.packages("fastDummies")
+install.packages("caret")
 ```
 
 $~$
@@ -127,7 +128,6 @@ $~$
 
 Divisão dos dados entre treino e teste:
 ```{r}
-
 # Funcao para dividir dados aleatoriamente em treinamento e teste #
 split_data = function(data, train_perc){
   train_size <- floor(train_perc * nrow(data))
