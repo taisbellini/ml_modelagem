@@ -50,7 +50,7 @@ variableImportance <- varImp(fullModLogCannabis , scale = FALSE)
 variableImportance
 ```
 
-Rodando o modelo novamente agora somente com as variaveis Age, Gender, Country, EScore, OScore e Cscore:
+Rodando o modelo novamente agora somente com as variaveis Age, Education, Gender, Country, EScore, OScore e Cscore:
 ```{r}
 caretTrainLogCannabis <- trainLogCannabis
 caretTrainLogCannabis$cannabis_user <- as.factor(caretTrainLogCannabis$cannabis_user)
