@@ -1,0 +1,174 @@
+---
+title: "Trabalho Final - Decision Tree ID3 (Aula)"
+output: html_notebook
+---
+
+Carregando os pacotes necessários:
+
+```{r}
+library(caret)      # for easy machine learning workflow
+
+# ID3
+library(data.tree)
+
+# CART
+library(rpart)      # for computing decision tree models 
+library(rpart.plot)
+
+# Plot das Árvores
+library(DiagrammeR)
+```
+
+Após rodar o Compilado.Rmd sem Dummys
+Lendo o .csv e splitando os dados em treino e test
+
+```{r}
+data <- subset(read.csv2(file="drug_use_data.csv"), select = -c(X, ID, Country, Ethnicity))
+
+# Funcao para dividir dados aleatoriamente em treinamento e teste #
+split_data = function(data, train_perc){
+  train_size <- floor(train_perc * nrow(data))
+  train_index <- sample(seq_len(nrow(data)), size = train_size)
+  train <- data[train_index, ]
+  test <- data[-train_index, ]
+  return(list("train" = train,
+              "test" = test))
+}
+#usage: 
+set.seed(233000)
+splitted_data <- split_data(data, 0.85)
+train <- splitted_data$train
+test <- splitted_data$test
+```
+
+Preparando os datasets de teste e treino para cada droga:
+
+```{r}
+train_alcohol <- subset(train, select = -c(ecstasy_user, cannabis_user, stimulating_user))
+train_cannabis <- subset(train, select = -c(alcohol_user, ecstasy_user, stimulating_user))
+train_ecstasy <- subset(train, select = -c(alcohol_user, cannabis_user, stimulating_user))
+train_stimulating <- subset(train, select = -c(alcohol_user, ecstasy_user, cannabis_user))
+
+test_alcohol <- subset(test, select = -c(ecstasy_user, cannabis_user, stimulating_user))
+test_cannabis <- subset(test, select = -c(alcohol_user, ecstasy_user, stimulating_user))
+test_ecstasy <- subset(test, select = -c(alcohol_user, cannabis_user, stimulating_user))
+test_stimulating <- subset(test, select = -c(alcohol_user, ecstasy_user, cannabis_user))
+```
+
+Criando as funções para calculo da Entropia, Ganho de informação, ID3 e Predict:
+
+```{r}
+# Função para verificar se um conjunto é puro
+# a classe deve estar na última coluna!!
+IsPure <- function(data){
+  length(unique(data[,ncol(data)])) == 1
+}
+
+# Função para calcular a Entropia
+Entropy <- function(vls) {
+  res <- vls/sum(vls) * log2(vls/sum(vls))
+  # se algum valor é 0 o cálculo acima retorn NA.
+  # vamos corrigir pois deveria ser 0
+  res[vls == 0] <- 0
+  -sum(res)
+}
+
+# Função para calcular o ganho de informação:
+InformationGain <- function(tble) {
+  tble <- as.data.frame.matrix(tble)
+  entropyBefore <- Entropy(colSums(tble))
+  s <- rowSums(tble)
+  entropyAfter <- sum(s/sum(s)*apply(tble, MARGIN = 1, FUN = Entropy))
+  informationGain <- entropyBefore - entropyAfter
+  return (informationGain)
+}
+
+# Algoritmo ID3
+# assume that the classifying features are in columns 1 to n-1
+TrainID3 <- function(node, data) {
+  
+  node$obsCount <- nrow(data)
+  
+  #if the data-set is pure (e.g. all toxic), then
+  if (IsPure(data)) {
+    #construct a leaf having the name of the pure feature (e.g. 'toxic')
+    child <- node$AddChild(unique(data[,ncol(data)]))
+    node$feature <- tail(names(data), 1)
+    child$obsCount <- nrow(data)
+    child$feature <- ''
+  } else {
+    #calculate the information gain
+    ig <- sapply(colnames(data)[-ncol(data)], 
+                 function(x) InformationGain(
+                   table(data[,x], data[,ncol(data)])
+                 )
+    )
+    #chose the feature with the highest information gain (e.g. 'color')
+    #if more than one feature have the same information gain, then take
+    #the first one
+    feature <- names(which.max(ig))
+    node$feature <- feature
+    
+    #take the subset of the data-set having that feature value
+    
+    childObs <- split(data[ ,names(data) != feature, drop = FALSE], 
+                      data[ ,feature], 
+                      drop = TRUE)
+    
+    for(i in 1:length(childObs)) {
+      #construct a child having the name of that feature value (e.g. 'red')
+      child <- node$AddChild(names(childObs)[i])
+      
+      #call the algorithm recursively on the child and the subset      
+      TrainID3(child, childObs[[i]])
+    }
+  }
+}
+
+# predict function, which will route data through our tree 
+# and make a prediction based on the leave where it ends up:
+Predict <- function(tree, features) {
+  if (tree$children[[1]]$isLeaf) return (tree$children[[1]]$name)
+  child <- tree$children[[features[[tree$feature]]]]
+  return ( Predict(child, features))
+}
+```
+
+Criando as estruturas de árvores do pacote data.tree:
+
+```{r}
+tree_alcohol <- Node$new("Alcohol_Tree")
+tree_cannabis <- Node$new("Cannabis_Tree")
+tree_ecstasy <- Node$new("Ecstasy_Tree")
+tree_stimulating <- Node$new("Stimulating_Tree")
+```
+
+Construindo as árvores:
+
+```{r}
+TrainID3(tree_alcohol, train_alcohol)
+TrainID3(tree_cannabis, train_cannabis)
+TrainID3(tree_ecstasy, train_ecstasy)
+TrainID3(tree_stimulating, train_stimulating)
+
+print(tree_alcohol, "feature", "obsCount")
+print(tree_cannabis, "feature", "obsCount")
+print(tree_ecstasy, "feature", "obsCount")
+print(tree_stimulating, "feature", "obsCount")
+
+plot(tree_alcohol)
+plot(tree_cannabis)
+plot(tree_ecstasy)
+plot(tree_stimulating)
+```
+
+Prevendo usuários na amostra de teste:
+
+```{r}
+
+a <- c(Age = "18-24", Gender = test_alcohol[1,2], Education = test_alcohol[1,3], NScore = test_alcohol[1,4], EScore = test_alcohol[1,5], OScore = test_alcohol[1,6], AScore = test_alcohol[1,7], CScore = test_alcohol[1,8])
+
+colnames(test_alcohol)
+
+Predict(tree_alcohol, a)
+```
