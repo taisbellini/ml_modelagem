@@ -24,7 +24,6 @@ testLogStimulating = dataLogStimulating[-indexes, ]
 
 Rodando o glm full model:
 ```{r}
-library(caret)
 trainLogStimulating <- subset(trainLogStimulating, select = -c(ID, alcohol_user, ecstasy_user, cannabis_user))
 
 
@@ -36,6 +35,20 @@ predFullStimulating <- ifelse(predict(fullModLogStimulating, newdata = testLogSt
 confusionMatrix(table(predFullStimulating, testLogStimulating$stimulating_user))
 
 ```
+
+Ponto de corte em 0.8:
+```{r}
+predFullStimulating08 <- ifelse(predict(fullModLogStimulating, newdata = testLogStimulating) >= 0.8, 1, 0)
+confusionMatrix(table(predFullStimulating08, testLogStimulating$stimulating_user))
+
+```
+
+```{r}
+predFullStimulating03 <- ifelse(predict(fullModLogStimulating, newdata = testLogStimulating) >= 0.3, 1, 0)
+confusionMatrix(table(predFullStimulating03, testLogStimulating$stimulating_user))
+
+```
+
 
 Rodando com stepAIC:
 ```{r}
@@ -54,27 +67,18 @@ variableImportance <- varImp(fullModLogStimulating , scale = FALSE)
 variableImportance
 ```
 
-Rodando o modelo novamente agora somente com as variaveis Age + Gender + Country + Ethnicity + NScore + 
-    EScore + OScore + AScore + CScore:
-```{r}
-caretTrainLogStimulating <- trainLogStimulating
-caretTrainLogStimulating$stimulating_user <- as.factor(caretTrainLogStimulating$stimulating_user)
-fullModLogStimulatingFilter <- train(
-  form = stimulating_user ~ Age + Gender + Country + Ethnicity + NScore + 
-    EScore + OScore + AScore + CScore,
-  data = caretTrainLogStimulating,
-  trControl = trainControl(method = "boot", number= 100),
-  method = "glm",
-  family = "binomial"
-)
+Calculando o odds ratio:
+Quando é < 1 a interpretação fica 
 
-fullModLogStimulatingFilter
-```
+OScoreVeryLow: 0.54 -> Pessoas com esse score baixo tem 46% de chance menor de ser usuario quando comparado as demais classes deste escore.
 
+Ethnicity dar uma olhada na distribuicao para explicar.
+
+OScoreHigh 1.31 -> a chance de ser usuario eh 1.31x maior de ser usuario do que as demais categorias.  
 
 ```{r}
-predFilterStimulating <- predict(fullModLogStimulatingFilter, testLogStimulating)
-confusionMatrix(table(predFilterStimulating, testLogStimulating$stimulating_user))
+stepStimulating
+round(exp(coef(stepStimulating)), 2)
 ```
 
 

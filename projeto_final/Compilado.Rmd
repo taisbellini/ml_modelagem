@@ -4,11 +4,13 @@ output: html_notebook
 ---
 # Introdução
 
+# TODO remover ethnicity e country e justificar a priory 
+
 $~$
 
 Instalar pacotes necessários: 
 
-```{r install}
+```{r}
 install.packages("fastDummies")
 install.packages("caret")
 install.packages("MASS")
@@ -17,7 +19,7 @@ install.packages("MASS")
 $~$
 
 Carregar bibliotecas necessarias: 
-```{r load.libraries}
+```{r}
 library(caret)
 library(fastDummies)
 library(MASS)
@@ -26,7 +28,7 @@ library(MASS)
 
 Carregando os dados:
 
-```{r read.data}
+```{r}
 
 data <- readxl::read_xlsx("drug_consumption_dataset.xlsx")
 head(data)
@@ -37,7 +39,7 @@ $~$
 
 Convertando os Scores em Categorias:
 
-```{r convert.scores}
+```{r}
 scores = c("NScore", "EScore", "OScore", "AScore", "CScore")
 
 for(col in scores){
@@ -72,7 +74,7 @@ Usuário: {Used in Last Year, Used in Last Month, Used in Last Week, Used in Las
 
 Drogas a serem analisadas: Alcool, Ecstasy, Cannabis, Estimulantes: {Cokes, Crack, Anfetamina}
 
-```{r classify.data}
+```{r}
 data <- transform(data, alcohol_user = 
                     ifelse((Alcohol == "Never Used" | 
                               Alcohol == "Used over a Decade Ago" | 
@@ -108,7 +110,7 @@ $~$
 
 Excluindo as variáveis não relevantes para a análise:
 
-```{r clean.data}
+```{r}
 dataTemp <- data[,33:36]
 data <- cbind(data[1:11], dataTemp)
 head(data) 
@@ -126,7 +128,7 @@ head(data_dummy)
 
 Exportando os dados: 
 
-```{r export.data}
+```{r}
 write.csv2(data, file="drug_use_data.csv")
 write.csv2(data_dummy, file="drug_use_data_dummy.csv")
 ```
@@ -135,7 +137,7 @@ write.csv2(data_dummy, file="drug_use_data_dummy.csv")
 $~$
 
 Divisão dos dados entre treino e teste:
-```{r split.data}
+```{r}
 # Funcao para dividir dados aleatoriamente em treinamento e teste #
 split_data = function(data, train_perc){
   train_size <- floor(train_perc * nrow(data))
