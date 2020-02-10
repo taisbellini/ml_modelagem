@@ -107,6 +107,35 @@ rock <-rockCluster(as.matrix(data.to.cluster), 2, debug=TRUE)
 Hierarquical: 
 https://towardsdatascience.com/hierarchical-clustering-on-categorical-data-in-r-a27e578f2995
 
+#Análise de Clusters com k-modes focado em uma única droga - EXPERIMENTAL
+
+```{r}
+install.packages("klaR")
+library(klaR)
+
+foco <- data[2:6]
+foco['Cannabis'] <- data$Cannabis
+
+set.seed(111)
+
+km2 = kmodes(foco, 2)
+km2
+
+library(plyr)
+clusters <- km2$cluster
+foco['cluster'] <- clusters
+
+classes <- unique(foco$Cannabis)
+for(class in classes){
+  subdf <- subset(foco, Cannabis == class)
+  cont = count(subdf['cluster'])
+  cont$freq = 100*cont$freq/nrow(subdf)
+  print(class)
+  print(cont)
+}
+
+```
+
 
 
 
