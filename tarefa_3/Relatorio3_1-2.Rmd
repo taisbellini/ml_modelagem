@@ -1,0 +1,132 @@
+---
+title: "Tarefa 3 - Classificação e Agrupamento"
+author: "Tais Bellini"
+date: "Fevereiro 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(dplyr)
+library(uclust)
+library(RColorBrewer)
+library(ggplot2)
+
+library(devtools)
+#install_github("vqv/ggbiplot")
+
+library(ggbiplot)
+```
+
+
+```{r}
+data <- read.csv2("dadosTarefa3.csv")
+```
+
+
+## Questão 1
+
+PCA para as variáveis contínuas **tumorsize**, **co2**, **lungcapacity**, **Age**, **WBC**, **RBC**, **IL6**:
+
+```{r }
+data$tumorsize <- as.numeric(data$tumorsize)
+data$co2 <- as.numeric(data$co2)
+data$lungcapacity <- as.numeric(data$lungcapacity)
+data$WBC <- as.numeric(data$WBC)
+data$RBC <- as.numeric(data$RBC)
+data$IL6 <- as.numeric(data$IL6)
+
+cont_data <- subset(data, select=c(tumorsize, co2, lungcapacity, Age, WBC, RBC, IL6))
+cancer.pca <- prcomp(na.omit(cont_data), center = TRUE,scale. = TRUE)
+summary(cancer.pca)
+
+```
+
+**Correlação das variáveis com PC1 e PC2:**
+
+
+```{r}
+ggbiplot(cancer.pca, main = "Correlação das variáveis com PC1 e PC2") + theme_minimal() 
+
+```
+ 
+ Podemos ver pela tabela e gráficos acima que **RBC** está mais correlacionada com a componente principal 1 (PC1) e que **tumorsize** está mais (inversamente) correlacionada com a componente principal 2 (PC2).
+ 
+ É possível diminuir a dimensionalidade. Sugeriria utilizar 3, que explicaria 64.28% da variabilidade e ainda é possível de visualizar.
+ 
+## Questão 2
+
+Gráficos usando os níveis das variáveis categóricas como grupos (**remission**, **Married**, **FamilyHx**, **SmokingHx**, **Sex**, **DID**)
+
+
+
+Agrupado por **remission**:
+
+```{r}
+data<- na.omit(data)
+data$remission <- as.factor(data$remission)
+ggbiplot(cancer.pca, groups = data$remission) + theme_minimal()
+```
+ 
+
+
+Agrupado por **Married**:
+
+```{r}
+data$Married <- as.factor(data$Married)
+ggbiplot(cancer.pca, groups = data$Married) + theme_minimal()
+
+```
+ 
+
+
+Agrupado por **FamilyHx**:
+
+```{r}
+data$FamilyHx <- as.factor(data$FamilyHx)
+ggbiplot(cancer.pca, groups = data$FamilyHx) + theme_minimal()
+
+```
+
+
+
+Agrupado por **SmokingHx**:
+
+```{r}
+data$SmokingHx <- as.factor(data$SmokingHx)
+ggbiplot(cancer.pca, groups = data$SmokingHx) + theme_minimal()
+
+```
+
+
+
+Agrupado por **Sex**:
+
+```{r}
+data$Sex <- as.factor(data$Sex)
+ggbiplot(cancer.pca, groups = data$Sex) + theme_minimal()
+
+```
+
+
+
+Agrupado por **DID**:
+
+```{r}
+data$DID <- as.factor(data$DID)
+ggbiplot(cancer.pca, groups = data$DID) + theme_minimal()
+
+```
+
+
+
+A variável que mais foi possível diferenciar foi **SmokingHx**.
+
+Agrupamento por **SmokingHx** com elipses:
+
+```{r}
+ggbiplot(cancer.pca, groups = data$SmokingHx, ellipse = TRUE) + theme_minimal()
+
+```
+
