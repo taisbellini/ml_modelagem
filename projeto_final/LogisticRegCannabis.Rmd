@@ -24,7 +24,6 @@ testLogCannabis = dataLogCannabis[-indexes, ]
 
 Rodando o glm full model:
 ```{r}
-library(caret)
 trainLogCannabis <- subset(trainLogCannabis, select = -c(ID, alcohol_user, ecstasy_user, stimulating_user))
 
 
@@ -38,7 +37,6 @@ confusionMatrix(table(predFullCannabis, testLogCannabis$cannabis_user))
 
 stepCannabis <- stepAIC(fullModLogCannabis, direction = "both")
 stepCannabis$anova
-
 predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.5, 1, 0)
 confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
 

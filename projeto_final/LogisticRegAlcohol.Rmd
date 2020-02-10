@@ -8,6 +8,12 @@ output: html_notebook
 
 -> primeiro rodar os chunks do Compilado
 
+#TODO executar pelo knit
+```{r}
+
+```
+
+
 Colocando os dados em variaveis especificas para o experimento:
 
 ```{r}
@@ -18,20 +24,19 @@ Separar em treino e teste usando o create data partition que garante distribuico
 
 ```{r}
 set.seed(205650)
-indexes <- createDataPartition(dataLog$alcohol_user, p = 0.85, list = FALSE)
+indexes <- createDataPartition(dataLogAlcohol$alcohol_user, p = 0.85, list = FALSE)
 trainLogAlcohol = dataLogAlcohol[indexes, ]
 testLogAlcohol = dataLogAlcohol[-indexes, ]
 ```
 
 Rodando o glm full model:
 ```{r}
-library(caret)
 trainLogAlcohol <- subset(trainLogAlcohol, select = -c(ID, ecstasy_user, cannabis_user, stimulating_user))
 
 fullModLogAlcohol <- glm(alcohol_user ~ ., data=trainLogAlcohol, family = "binomial")
 
-predFull <- ifelse(predict(fullModLogAlcohol, newdata = testLogAlcohol) >= 0.5, 1, 0)
-confusionMatrix(table(predFull, testLogAlcohol$alcohol_user))
+predFullAlcohol <- ifelse(predict(fullModLogAlcohol, newdata = testLogAlcohol) >= 0.5, 1, 0)
+confusionMatrix(table(predFullAlcohol, testLogAlcohol$alcohol_user))
 
 ```
 
@@ -42,7 +47,8 @@ Filtrando variaveis com stepwise:
 stepAlcohol <- stepAIC(fullModLogAlcohol, direction = "both")
 stepAlcohol$anova
 
-predStepAlcohol <- ifelse(predict(stepCannabis, newdata = testLogAlcohol) >= 0.5, 1, 0)
+predStepAlcohol <- ifelse(predict(stepAlcohol, newdata = testLogAlcohol) >= 0.5, 1, 0)
+predStepAlcohol <- factor(predStepAlcohol, levels = 0:1)
 confusionMatrix(table(predStepAlcohol, testLogAlcohol$alcohol_user))
 
 ```
@@ -71,7 +77,7 @@ fullModLogAlcoholFilter
 
 
 ```{r}
-predFilterAlcohol <- predict(fullModLogAlcogolFilter, testLogAlcohol)
+predFilterAlcohol <- predict(fullModLogAlcoholFilter, testLogAlcohol)
 confusionMatrix(table(predFilterAlcohol, testLogAlcohol$alcohol_user))
 ```
 
