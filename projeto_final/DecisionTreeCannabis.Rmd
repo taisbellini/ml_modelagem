@@ -1,0 +1,53 @@
+---
+title: "Trabalho Final - Árvores de Decisão"
+output: html_notebook
+---
+
+## Cannabis
+
+-> primeiro rodar os chunks do Compilado
+
+Colocando os dados em variaveis especificas para o experimento:
+
+```{r}
+dataDTCannabis <- data
+```
+
+Separar em treino e teste usando o create data partition que garante distribuicoes similares:
+
+```{r}
+set.seed(205650)
+library(caret)
+indexes <- createDataPartition(dataDTCannabis$cannabis_user, p = 0.85, list = FALSE)
+trainDTCannabis = dataDTCannabis[indexes, ]
+testDTCannabis = dataDTCannabis[-indexes, ]
+```
+
+Testando o modelo da árvore de decisão:
+```{r}
+library(caret)
+trainDTCannabis <- subset(trainDTCannabis, select = -c(ID, alcohol_user, ecstasy_user, stimulating_user))
+testDTCannabis <- subset(testDTCannabis, select = -c(ID, alcohol_user, ecstasy_user, stimulating_user))
+
+#install.packages("rpart")
+library(rpart)
+model_fit <- rpart(cannabis_user~Age+Gender+Education+Country+Ethnicity+NScore+EScore+OScore+AScore+CScore, data = trainDTCannabis, method = "class")
+
+# Predicting the values for train dataset
+precticed_train <- predict(model_fit, newdata = trainDTCannabis, "class")
+precticed_test <- predict(model_fit, newdata = testDTCannabis, "class")
+
+# Building classification table
+ctable_train <- table(trainDTCannabis$cannabis_user, precticed_train)
+ctable_test <- table(testDTCannabis$cannabis_user, precticed_test)
+ctable_train
+ctable_test
+
+# Calculating accuracy - sum of diagonal elements divided by total obs
+round((sum(diag(ctable_train))/sum(ctable_train))*100,2)
+round((sum(diag(ctable_test))/sum(ctable_test))*100,2)
+
+
+```
+
+# TO DO: feature selection? melhorar DT?
