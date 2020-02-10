@@ -163,7 +163,15 @@ Paper \cite{fehrman2015}
 % ----------------------------------------------------------
 % Cap. 1
 % ----------------------------------------------------------
-\section{Cap. 1}
+\section{Introdução}
+
+Introducao - descricao superficial do problema
+- classificar em usuario e nao usuario 
+- se basear nas variaveis... 
+- analise sera feita para 3 drogas e um grupo
+- Quais drogas escolhemos analisar:Alcool, ecstasy, Cannabis, grupo. Justificar
+- indicar que avaliaremos acuracia e sensibilidade, pois queremos acertar os usuarios.
+- faremos a analise para cada droga/grupo pois como as disrbuicoes e comportamentos diferem pode ser que mude.
 
 {Never Used, Over a Decade ago, Last Decade} - Rest
 
@@ -183,15 +191,112 @@ Alcool, Ecstasy, Cannabis, {Cokes, Crack, Anfetamina}
 % ----------------------------------------------------------
 % Cap. 2
 % ----------------------------------------------------------
-\section{Cap. 2}
+\section{Descrição dos dados}
+
+
+- Resumo geral: numero de linhas, mostrar todas as variaveis disponiveis
+- Indicar que pode ser viesado pela forma de coleta de dados
+
+\subsection{Resumo dos dados}
+- algumas estatisticas
+
+\subsection{Variáveis excluídas a priori}
+- Country, Ethnicity: mostrar distribuição, que tem muito UK, muito white e que pode interferir na analise. 
+- Referenciar estudo 
+- Impulsive e SS: Nao foram encontradas referencias confiaveis sobre como classificar os niveis
+
+\subsection{Variáveis que serão utilizadas}
+- Scores: explicar o que cada um significa
+- Explicar a classificacao em very low, low, average, high, very high
+- Age, gender, education ... mostrar categorias, distribuicoes e etc. separado por droga/grupo
+- lista de drogas disponiveis e os seus níveis
+
+\subsection{Distribuicoes das drogas escolhidas e variaveis associadas}
 
 \lipsum[5]
 
-\section{Cap. 3}
+\section{Técnica empregada}
+
+- Como classificamos usuario de nao usuario: referenciar estudo para a nossa escolha
+- 
+- Criar um classificador que, baesado das nas variaveis descritas no cap 2, indica se a pessoa seria usuario ou nao daquela determinada droga ou grupo. 
+Para isso, avaliaremos alguns metodos: regressao logistica, arvore de decisao, ... Em cada metodo para cada droga/grupo, avaliaremos se eh possivel reduzir o numero de variaveis mantendo ou melhorando o resultado. Compararemos os metodos com o mesmo subset de variaveis para chegar a conclusao de qual sera melhor. Apresentaremos os resultados finais do metodo escolhido. 
 
 \lipsum[6]
 
-\section{Cap. 4}
+\section{Resultados}
+
+\subsection{Cannabis}
+retomar caracteristicas da amostra
+\subsubsection{Reg logistica}
+
+- resumido, nao apresentar tudo, apenas o que for relevante.
+
+- comparar full com o reduzido com AIC
+- importancia das variaveis
+
+- confusion matriz e resultados (acc, sensibilidade)
+\subsubsection{Arvore de decisao}
+... 
+
+\subsubsection{comparacao e escolha do modelo e metodo}
+
+\subsection{Ecstasy}
+retomar caracteristicas da amostra
+\subsubsection{Reg logistica}
+
+- resumido, nao apresentar tudo, apenas o que for relevante.
+
+- comparar full com o reduzido com AIC
+- importancia das variaveis
+
+- confusion matriz e resultados (acc, sensibilidade)
+\subsubsection{Arvore de decisao}
+... 
+
+\subsubsection{comparacao e escolha do modelo e metodo}
+
+- comparar
+- escolher o melhor e executar resultados finais (acuracia, sensibilidade, ...)
+
+\subsection{Alcool}
+retomar caracteristicas da amostra
+mostrar como a distribuicao faz com que seja muito dificil fazer algo relevante.
+Talvez fazer alguma coisa para eventos raros (se der tempo, se nao so comentar que seria uma solucao).
+\subsubsection{Reg logistica}
+
+- resumido, nao apresentar tudo, apenas o que for relevante.
+
+- comparar full com o reduzido com AIC
+- importancia das variaveis
+
+- confusion matriz e resultados (acc, sensibilidade)
+\subsubsection{Arvore de decisao}
+... 
+
+\subsubsection{comparacao e escolha do modelo e metodo}
+
+- comparar
+- escolher o melhor e executar resultados finais (acuracia, sensibilidade, ...)
+
+\subsection{Grupo}
+Retomar caracteristica da amostra
+\subsubsection{Reg logistica}
+
+- resumido, nao apresentar tudo, apenas o que for relevante.
+
+- comparar full com o reduzido com AIC
+- importancia das variaveis
+
+- confusion matriz e resultados (acc, sensibilidade)
+\subsubsection{Arvore de decisao}
+... 
+
+\subsubsection{comparacao e escolha do modelo e metodo}
+
+- comparar
+- escolher o melhor e executar resultados finais (acuracia, sensibilidade, ...)
+
 
 \lipsum[7]
 
@@ -205,6 +310,11 @@ Alcool, Ecstasy, Cannabis, {Cokes, Crack, Anfetamina}
 % ----------------------------------------------------------
 \section*{Considerações finais}
 \addcontentsline{toc}{section}{Considerações finais}
+
+- apos avaliar os metodos X, Y, Z, observamos que, para estes dados, o mais adequado foi... Que para a droga tal e tal o modelo tal ficou melhor, ... 
+- retomar problemas do banco de dados
+- indicar outras coisas que poderiam ser feitas: tratar nao usuario de alcool como evento raro, ...
+
 
 \lipsum[8]
 
