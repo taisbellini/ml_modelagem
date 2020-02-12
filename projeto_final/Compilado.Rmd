@@ -29,10 +29,8 @@ library(MASS)
 Carregando os dados:
 
 ```{r}
-
 data <- readxl::read_xlsx("drug_consumption_dataset.xlsx")
 head(data)
-
 ```
 
 $~$
@@ -113,6 +111,7 @@ Excluindo as variáveis não relevantes para a análise:
 ```{r}
 dataTemp <- data[,33:36]
 data <- cbind(data[1:11], dataTemp)
+data <- subset(data, select = -c(Country, Ethnicity))
 head(data) 
 ```
 
