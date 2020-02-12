@@ -1,4 +1,4 @@
----
+----
 title: "Trabalho Final - Regressao Logistica"
 output: html_notebook
 ---
@@ -11,6 +11,17 @@ Colocando os dados em variaveis especificas para o experimento:
 
 ```{r}
 dataLogCannabis <- data
+dataLogCannabis$Age <- as.factor(dataLogCannabis$Age)
+dataLogCannabis$Gender <- as.factor(dataLogCannabis$Gender)
+dataLogCannabis$Education <- as.factor(dataLogCannabis$Education)
+dataLogCannabis$NScore <- as.factor(dataLogCannabis$NScore)
+dataLogCannabis$EScore <- as.factor(dataLogCannabis$EScore)
+dataLogCannabis$AScore <- as.factor(dataLogCannabis$AScore)
+dataLogCannabis$CScore <- as.factor(dataLogCannabis$CScore)
+dataLogCannabis$OScore <- as.factor(dataLogCannabis$OScore)
+dataLogCannabis$cannabis_user <- as.factor(dataLogCannabis$cannabis_user)
+head(dataLogCannabis)
+
 ```
 
 Separar em treino e teste usando o create data partition que garante distribuicoes similares:
@@ -52,7 +63,6 @@ confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
 
 Ponto de corte em 0.8:
 ```{r}
-stepCannabis <- stepAIC(fullModLogCannabis, direction = "both")
 predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.8, 1, 0)
 confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
 
@@ -65,26 +75,24 @@ variableImportance <- varImp(fullModLogCannabis , scale = FALSE)
 variableImportance
 ```
 
-Rodando o modelo novamente agora somente com as variaveis Age, Education, Gender, Country, EScore, OScore e Cscore:
+Plotting:
 ```{r}
-caretTrainLogCannabis <- trainLogCannabis
-caretTrainLogCannabis$cannabis_user <- as.factor(caretTrainLogCannabis$cannabis_user)
-fullModLogCannabisFilter <- train(
-  form = cannabis_user ~ Age + Gender + Education + Country + Ethnicity + 
-    OScore + CScore,
-  data = caretTrainLogCannabis,
-  trControl = trainControl(method = "boot", number= 100),
-  method = "glm",
-  family = "binomial"
-)
-
-fullModLogCannabisFilter
-```
-
-
-```{r}
-predFilterCannabis <- predict(fullModLogCannabisFilter, testLogCannabis)
-confusionMatrix(table(predFilterCannabis, testLogCannabis$cannabis_user))
+library(ggplot2)
+## now we can plot the data
+predicted.data <- data.frame(
+  prob.user=stepCannabis$fitted.values,
+  user=trainLogCannabis$cannabis_user)
+ 
+predicted.data <- predicted.data[
+  order(predicted.data$prob.user, decreasing=FALSE),]
+predicted.data$rank <- 1:nrow(predicted.data)
+ 
+## Lastly, we can plot the predicted probabilities for each sample having
+## heart disease and color by whether or not they actually had heart disease
+ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
+  geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
+  xlab("Index") +
+  ylab("Predicted probability of being a Cannabis user")
 ```
 
 
