@@ -22,25 +22,42 @@ trainLogCannabis = dataLogCannabis[indexes, ]
 testLogCannabis = dataLogCannabis[-indexes, ]
 ```
 
+```{r}
+table(trainLogCannabis$cannabis_user)
+table(dataLogCannabis$cannabis_user)
+```
+
+
 Rodando o glm full model:
 ```{r}
 trainLogCannabis <- subset(trainLogCannabis, select = -c(ID, alcohol_user, ecstasy_user, stimulating_user))
 
 
 fullModLogCannabis <- glm(cannabis_user ~ ., data=trainLogCannabis, family = "binomial")
-fullModLogCannabis
 
 
 predFullCannabis <- ifelse(predict(fullModLogCannabis, newdata = testLogCannabis) >= 0.5, 1, 0)
 confusionMatrix(table(predFullCannabis, testLogCannabis$cannabis_user))
 
+```
 
+StepAIC:
+
+```{r}
 stepCannabis <- stepAIC(fullModLogCannabis, direction = "both")
 stepCannabis$anova
 predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.5, 1, 0)
 confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
+```
+
+Ponto de corte em 0.8:
+```{r}
+stepCannabis <- stepAIC(fullModLogCannabis, direction = "both")
+predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.8, 1, 0)
+confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
 
 ```
+
 
 Importancia das variaveis: 
 ```{r}

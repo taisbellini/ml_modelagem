@@ -8,16 +8,11 @@ output: html_notebook
 
 -> primeiro rodar os chunks do Compilado
 
-#TODO executar pelo knit
-```{r}
-
-```
-
-
 Colocando os dados em variaveis especificas para o experimento:
 
 ```{r}
 dataLogAlcohol <- data
+head(dataLogAlcohol)
 ```
 
 Separar em treino e teste usando o create data partition que garante distribuicoes similares:
@@ -29,13 +24,24 @@ trainLogAlcohol = dataLogAlcohol[indexes, ]
 testLogAlcohol = dataLogAlcohol[-indexes, ]
 ```
 
-Rodando o glm full model:
+
+Avaliar distribuição de usuarios e não usuarios:
+```{r}
+table(trainLogAlcohol$alcohol_user)
+table(dataLogAlcohol$alcohol_user)
+
+136/(1749+136)
+```
+
+
+Remover variaveis das outras drogas. Rodar o glm full model com ponto de corte em 0.5:
 ```{r}
 trainLogAlcohol <- subset(trainLogAlcohol, select = -c(ID, ecstasy_user, cannabis_user, stimulating_user))
 
 fullModLogAlcohol <- glm(alcohol_user ~ ., data=trainLogAlcohol, family = "binomial")
 
 predFullAlcohol <- ifelse(predict(fullModLogAlcohol, newdata = testLogAlcohol) >= 0.5, 1, 0)
+predFullAlcohol <- factor(predFullAlcohol, levels = 0:1)
 confusionMatrix(table(predFullAlcohol, testLogAlcohol$alcohol_user))
 
 ```
@@ -53,32 +59,18 @@ confusionMatrix(table(predStepAlcohol, testLogAlcohol$alcohol_user))
 
 ```
 
+Acuracia do treino:
+```{r}
+predStepAlcoholTrain <- ifelse(predict(stepAlcohol, newdata = trainLogAlcohol) >= 0.5, 1, 0)
+predStepAlcoholTrain <- factor(predStepAlcoholTrain, levels = 0:1)
+confusionMatrix(table(predStepAlcoholTrain, trainLogAlcohol$alcohol_user))
+
+```
+
 
 Importancia das variaveis: 
 ```{r}
 variableImportance <- varImp(fullModLogAlcohol, useModel = TRUE , scale = FALSE)
-variableImportance
-```
-
-Rodando o modelo novamente agora somente com as variaveis Age, Gender, Country, EScore, OScore e Cscore:
-```{r}
-trainLogAlcohol$alcohol_user <- as.factor(trainLogAlcohol$alcohol_user)
-fullModLogAlcoholFilter <- train(
-  form = alcohol_user ~ Age+Ethnicity+Country,
-  data = trainLogAlcohol,
-  trControl = trainControl(method = "boot", number= 100),
-  method = "glm",
-  family = "binomial"
-)
-
-fullModLogAlcoholFilter
-```
-
-
-
-```{r}
-predFilterAlcohol <- predict(fullModLogAlcoholFilter, testLogAlcohol)
-confusionMatrix(table(predFilterAlcohol, testLogAlcohol$alcohol_user))
 ```
 
 

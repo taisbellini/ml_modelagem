@@ -187,6 +187,8 @@ Grupo de Estimulantes: Cocaína, Crack, Anfetamina
 
 - Faremos a analise para cada droga/grupo pois como as disrbuicoes e comportamentos diferem pode ser que mude.
 
+- Métricas para avaliar o melhor: acurácia e sensibilidae (explicar).
+
 % ----------------------------------------------------------
 % Cap. 2
 % ----------------------------------------------------------
@@ -220,31 +222,41 @@ Grupo de Estimulantes: Cocaína, Crack, Anfetamina
 
 \subsection{Distribuicoes das drogas escolhidas e variaveis associadas}
 
+% ----------------------------------------------------------
+% Cap. 3
+% ----------------------------------------------------------
+
 \section{Técnica empregada}
 
-- Como classificamos usuario de nao usuario: referenciar estudo para a nossa escolha
+O objetivo desde estudo é criar um classificador que, baesado das nas variáveis descritas no capítulo 2, indica se aquela pessoa tem mais chance de ser usuária de uma determinada droga ou grupo de drogas ou não. 
 
-- 
+Para realizar a classificação, consideramos usuários os indivíduos que tinham como resposta Never Used, Used a Decade Ago e Used in Last Decade. Os demais foram considerados usuários. Esta escolha foi feita a partir de um estudo prévio (ref).
 
-- Criar um classificador que, baesado das nas variaveis descritas no cap 2, indica se a pessoa seria usuario ou nao daquela determinada droga ou grupo. 
+Foram availiados X métodos: Regressao Logística, arvore de decisao, ... 
 
-Para isso, avaliaremos alguns metodos: regressao logistica, arvore de decisao, ... Em cada metodo para cada droga/grupo, avaliaremos se eh possivel reduzir o numero de variaveis mantendo ou melhorando o resultado. Compararemos os metodos com o mesmo subset de variaveis para chegar a conclusao de qual sera melhor. Apresentaremos os resultados finais do metodo escolhido. 
+Em cada método, para cada droga ou grupo de drogas, foi avaliada a possibilidade de reduzir o número de variáveis independentes de forma que mantivesse ou melhorasse o resultado. Compararemos os métodos com o mesmo subset de variáveis independentes para definir qual será melhor de acordo com as métricas acurácia e sensibilidade. Apresentaremos os resultados finais do método escolhido. 
+
+\subsection{Regressão Logística}
+
+Para a estimação do modelo de regressão logística foi utilizado o pacote \textbf{glm} do R com o parâmetro \emph{family} como \emp{binomial}.
+Para cada droga ou grupo de droga, inicialmente, geramos um modelo utilizando todas as variáveis e obtivemos \textbf{acurácia} e \textbf{sensibilidade}. Depois, foi aplicada a função \textbf{StepAIC} do pacote \textbf{MASS} para determinar se um modelo com menos variáveis seria mais ou igualmente eficiente de acordo com as métricas escolhidas.
+
+
 
 \section{Resultados}
 
 \subsection{Cannabis}
 
 retomar caracteristicas da amostra
+ 0   1 
+886 999 
 
 \subsubsection{Reg logistica}
 
-- resumido, nao apresentar tudo, apenas o que for relevante.
+No caso da regressão logística, utilizando todas as variáveis e o ponto de corte em 0.5, estimamos um modelo com 78.7\% de acurácia, e 84.06\% de sensibilidade. 
+Utilizando a função \textbf{stepAIC} com o parâmetro \emph{direction} definido como \emph{both}, temos um modelo que considera apenas as variáveis independente \textbf{Age, Gender, Education, NScore, OScore, CScore} sem alterar o resultado das métricas. Assim, observamos que EScore(botar o nome certo) e AScore (botar o nome certo) podem ter pouca influência no uso de maconha.
+Alterando o ponto de corte para 0.8, obtivemos uma acurácia de 79.43\% e sensibilidade de 89.86\%. (colocar possivel explicacao)
 
-- comparar full com o reduzido com AIC
-
-- importancia das variaveis
-
-- confusion matriz e resultados (acc, sensibilidade)
 
 \subsubsection{Arvore de decisao}
 
@@ -278,15 +290,16 @@ retomar caracteristicas da amostra
 
 \subsection{Alcool}
 
-retomar caracteristicas da amostra
+Foi observado que a amostra utilizada para avaliar se um indivíduo é ou não usuário de Álcool não tem boas propriedades e os modelos estimados não possuem boas propriedades. Apenas 7\% dos indivíduos da amostra não são usuários, o que ...
 
-mostrar como a distribuicao faz com que seja muito dificil fazer algo relevante.
-
-Talvez fazer alguma coisa para eventos raros (se der tempo, se nao so comentar que seria uma solucao).
+- graficos com variaveis independentes e classificacao usuario e nao usuario 
 
 \subsubsection{Reg logistica}
 
-- resumido, nao apresentar tudo, apenas o que for relevante.
+No caso da regressão logística, utilizando todas as variáveis e o ponto de corte em 0.5, estimamos um modelo com 94.3\% de acurácia, mas 0\% de sensibilidade. Alterando o ponto de corte para 0.3 ou 0.8 não apresentou diferença no resultado. Isto porque como a grande maioria das pessoas da amostra são usuários, o algoritmo classifica sempre como usuário e tem boas chances de acertar. 
+Utilizando a função \textbf{stepAIC} com o parâmetro \emph{direction} definido como \emph{both}, temos um modelo que considera apenas a variável independente \textbf{Age}.
+Talvez fazer alguma coisa para eventos raros (se der tempo, se nao so comentar que seria uma solucao).
+
 
 - comparar full com o reduzido com AIC
 
