@@ -3,14 +3,14 @@ title: "Trabalho Final - Árvores de Decisão"
 output: html_notebook
 ---
 
-## Cannabis
+## Ecstasy
 
 -> primeiro rodar os chunks do Compilado
 
 Colocando os dados em variaveis especificas para o experimento:
 
 ```{r}
-dataDTCannabis <- data
+dataDTEcstasy <- data
 ```
 
 Separar em treino e teste usando o create data partition que garante distribuicoes similares:
@@ -18,11 +18,11 @@ Separar em treino e teste usando o create data partition que garante distribuico
 ```{r}
 set.seed(205650)
 library(caret)
-indexes <- createDataPartition(dataDTCannabis$cannabis_user, p = 0.85, list = FALSE)
-trainDTCannabis = dataDTCannabis[indexes, ]
-testDTCannabis = dataDTCannabis[-indexes, ]
-trainDTCannabis <- subset(trainDTCannabis, select = -c(ID, alcohol_user, ecstasy_user, stimulating_user, Country, Ethnicity))
-testDTCannabis <- subset(testDTCannabis, select = -c(ID, alcohol_user, ecstasy_user, stimulating_user, Country, Ethnicity))
+indexes <- createDataPartition(dataDTEcstasy$ecstasy_user, p = 0.85, list = FALSE)
+trainDTEcstasy = dataDTEcstasy[indexes, ]
+testDTEcstasy = dataDTEcstasy[-indexes, ]
+trainDTEcstasy <- subset(trainDTEcstasy, select = -c(ID, alcohol_user, cannabis_user, stimulating_user, Country, Ethnicity))
+testDTEcstasy <- subset(testDTEcstasy, select = -c(ID, alcohol_user, cannabis_user, stimulating_user, Country, Ethnicity))
 
 ```
 
@@ -31,10 +31,10 @@ Ajustando o modelo da árvore de decisão:
 ```{r}
 #install.packages("rpart")
 library(rpart)
-model_fit <- rpart(cannabis_user~Age+Gender+Education+NScore+EScore+OScore+AScore+CScore, data = trainDTCannabis, method = "class", control = list(minsplit = 20))
+model_fit <- rpart(ecstasy_user~Age+Gender+Education+NScore+EScore+OScore+AScore+CScore, data = trainDTEcstasy, method = "class", control = list(minsplit = 20))
 
-predicted_train <- predict(model_fit, newdata = trainDTCannabis, "class")
-predicted_test <- predict(model_fit, newdata = testDTCannabis, "class")
+predicted_train <- predict(model_fit, newdata = trainDTEcstasy, "class")
+predicted_test <- predict(model_fit, newdata = testDTEcstasy, "class")
 
 ```
 
@@ -51,8 +51,8 @@ printcp(model_fit)
 Gerando as Matrizes de Confusão:
 
 ```{r}
-ctable_train <- confusionMatrix(predicted_train, as.factor(trainDTCannabis$cannabis_user), positive = "1")
-ctable_test <- confusionMatrix(predicted_test, as.factor(testDTCannabis$cannabis_user), positive = "1")
+ctable_train <- confusionMatrix(predicted_train, as.factor(trainDTEcstasy$ecstasy_user), positive = "1")
+ctable_test <- confusionMatrix(predicted_test, as.factor(testDTEcstasy$ecstasy_user), positive = "1")
 ctable_train$table
 ctable_test$table
 
@@ -109,8 +109,8 @@ optim_table = optim_table[optim_table$rel.error + optim_table$xstd < optim_table
 cp_min = optim_table[which.min(optim_table[,"xerror"]),"CP"]
 pfit<- prune(model_fit, cp= cp_min)
 
-predicted_train_pruned <- predict(pfit, newdata = trainDTCannabis, "class")
-predicted_test_pruned <- predict(pfit, newdata = testDTCannabis, "class")
+predicted_train_pruned <- predict(pfit, newdata = trainDTEcstasy, "class")
+predicted_test_pruned <- predict(pfit, newdata = testDTEcstasy, "class")
 
 ```
 
@@ -128,8 +128,8 @@ printcp(pfit)
 Gerando as Matrizes de Confusão para a Árvore Podada:
 
 ```{r}
-ctable_train_pruned <- confusionMatrix(predicted_train_pruned, as.factor(trainDTCannabis$cannabis_user), positive = "1")
-ctable_test_pruned <- confusionMatrix(predicted_test_pruned, as.factor(testDTCannabis$cannabis_user), positive = "1")
+ctable_train_pruned <- confusionMatrix(predicted_train_pruned, as.factor(trainDTEcstasy$ecstasy_user), positive = "1")
+ctable_test_pruned <- confusionMatrix(predicted_test_pruned, as.factor(testDTEcstasy$ecstasy_user), positive = "1")
 ctable_train_pruned$table
 ctable_test_pruned$table
 
@@ -156,7 +156,7 @@ Plot feio da árvore podada:
 ```{r}
 par(xpd = NA)
 plot(pfit, uniform=TRUE,
-   main="Árvore de Decisão Podada para Cannabis")
+   main="Árvore de Decisão Podada para Ecstasy")
 text(pfit, use.n=TRUE, all=TRUE, cex=.8)
 
 ```
