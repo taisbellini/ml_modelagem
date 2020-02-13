@@ -30,7 +30,6 @@ Avaliar distribuição de usuarios e não usuarios:
 table(trainLogAlcohol$alcohol_user)
 table(dataLogAlcohol$alcohol_user)
 
-136/(1749+136)
 ```
 
 

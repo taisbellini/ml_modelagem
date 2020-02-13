@@ -20,6 +20,10 @@ xtabs(~ ecstasy_user + Gender, data = dataLogEcstasy)
 xtabs(~ ecstasy_user + Age, data = dataLogEcstasy)
 xtabs(~ ecstasy_user + Education, data = dataLogEcstasy)
 
+dataLogEcstasy$control <- ifelse(dataLogEcstasy$ecstasy_user == 1, 3, 1)
+head(dataLogEcstasy)
+
+dataLogEcstasy$control
 table(dataLogEcstasy$ecstasy_user)
 ```
 
@@ -34,17 +38,18 @@ testLogEcstasy = dataLogEcstasy[-indexes, ]
 
 Rodando o glm full model:
 ```{r}
-trainLogEcstasy <- subset(trainLogEcstasy, select = -c(ID, alcohol_user, stimulating_user, cannabis_user))
+#trainLogEcstasy <- subset(trainLogEcstasy, select = -c(ID, alcohol_user, stimulating_user, cannabis_user))
 
 
-fullModLogEcstasy <- glm(ecstasy_user ~ ., data=trainLogEcstasy, family = "binomial")
+fullModLogEcstasy <- glm(ecstasy_user ~ Age+Gender+Education+NScore+CScore+AScore+EScore+OScore, data=trainLogEcstasy, weights = control, family = "binomial")
 fullModLogEcstasy
 
 ```
 
 ```{r}
 predFullEcstasy <- ifelse(predict(fullModLogEcstasy, newdata = testLogEcstasy) >= 0.5, 1, 0)
-confusionMatrix(table(predFullEcstasy, testLogEcstasy$ecstasy_user))
+predFullEcstasy
+confusionMatrix(table(predFullEcstasy, testLogEcstasy$ecstasy_user), positive = "1")
 ```
 
 
@@ -57,7 +62,7 @@ confusionMatrix(table(predFullEcstasy08, testLogEcstasy$ecstasy_user))
 
 ```{r}
 predFullEcstasy03 <- ifelse(predict(fullModLogEcstasy, newdata = testLogEcstasy) >= 0.3, 1, 0)
-confusionMatrix(table(predFullEcstasy03, testLogEcstasy$ecstasy_user))
+confusionMatrix(table(predFullEcstasy03, testLogEcstasy$ecstasy_user), positive = "1")
 
 ```
 
@@ -76,8 +81,8 @@ summary(stepEcstasy)
 
 
 ```{r}
-predStepEcstasy <- ifelse(predict(stepEcstasy, newdata = testLogEcstasy) >= 0.75, 1, 0)
-confusionMatrix(table(predStepEcstasy, testLogEcstasy$ecstasy_user))
+predStepEcstasy <- ifelse(predict(stepEcstasy, newdata = testLogEcstasy) >= 0.4, 1, 0)
+confusionMatrix(table(predStepEcstasy, testLogEcstasy$ecstasy_user), positive="1")
 
 ```
 
@@ -95,8 +100,10 @@ predicted.data$rank <- 1:nrow(predicted.data)
  
 ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
   geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
-  xlab("Index") +
-  ylab("Predicted probability of being a Ecstasy drug user")
+  xlab("Indivíduos ordenados") +
+  ylab("Probabilidade predita de ser usuário de Ecstasy") + 
+  labs(color="Usuário") +
+  scale_color_hue(labels = c("Não", "Sim"))
 ```
 
 Importancia das variaveis: 
