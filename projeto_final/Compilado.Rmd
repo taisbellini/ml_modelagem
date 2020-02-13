@@ -4,8 +4,6 @@ output: html_notebook
 ---
 # Introdução
 
-# TODO remover ethnicity e country e justificar a priory 
-
 $~$
 
 Instalar pacotes necessários: 
@@ -114,6 +112,25 @@ data <- cbind(data[1:11], dataTemp)
 data <- subset(data, select = -c(Country, Ethnicity))
 head(data) 
 ```
+
+Transformar variaveis em fatores: 
+
+```{r}
+data$Age <- as.factor(data$Age)
+data$Gender <- as.factor(data$Gender)
+data$Education <- as.factor(data$Education)
+data$NScore <- as.factor(data$NScore)
+data$EScore <- as.factor(data$EScore)
+data$AScore <- as.factor(data$AScore)
+data$CScore <- as.factor(data$CScore)
+data$OScore <- as.factor(data$OScore)
+data$cannabis_user <- as.factor(data$cannabis_user)
+data$alcohol_user <- as.factor(data$alcohol_user)
+data$ecstasy_user <- as.factor(data$ecstasy_user)
+data$stimulating_user <- as.factor(data$stimulating_user)
+
+```
+
 
 $~$
 
