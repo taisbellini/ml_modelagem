@@ -9,7 +9,7 @@ head(mtcars, n = 2)
 
 nm = rownames(mtcars)
 mtcars.country <- c(rep("Japan", 3), rep("US",4), rep("Europe", 7),rep("US",3), "Europe", rep("Japan", 3), rep("US",4), rep("Europe", 3), "US", rep("Europe", 3))
-
+mtcars.country
 cores = c("red", "green","blue")
 clrs <- cores[as.factor(mtcars.country)]
 
@@ -151,3 +151,4 @@ ggplot(data = data.frame(df, gp = as.factor(gp.u))) +
   scale_color_manual(values = cores.hc.a) +
   geom_text(aes(x = hp, y= mpg, label = nm, color = mtcars.country), hjust = 0, vjust = 0) +
   theme_minimal()
+
