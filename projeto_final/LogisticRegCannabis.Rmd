@@ -64,6 +64,7 @@ predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0
 confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
 ```
 
+
 Resumo:
 ```{r}
 summary(stepCannabis)
@@ -76,7 +77,6 @@ predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0
 confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
 
 ```
-
 
 Importancia das variaveis: 
 ```{r}

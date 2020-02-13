@@ -12,6 +12,7 @@ Instalar pacotes necessários:
 install.packages("fastDummies")
 install.packages("caret")
 install.packages("MASS")
+install.packages("e1071")
 ```
 
 $~$
@@ -21,6 +22,7 @@ Carregar bibliotecas necessarias:
 library(caret)
 library(fastDummies)
 library(MASS)
+library(e1071)
 ```
 
 

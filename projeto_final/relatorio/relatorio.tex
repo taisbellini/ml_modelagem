@@ -238,8 +238,8 @@ Em cada método, para cada droga ou grupo de drogas, foi avaliada a possibilidad
 
 \subsection{Regressão Logística}
 
-Para a estimação do modelo de regressão logística foi utilizado o pacote \textbf{glm} do R com o parâmetro \emph{family} como \emp{binomial}.
-Para cada droga ou grupo de droga, inicialmente, geramos um modelo utilizando todas as variáveis e obtivemos \textbf{acurácia} e \textbf{sensibilidade}. Depois, foi aplicada a função \textbf{StepAIC} do pacote \textbf{MASS} para determinar se um modelo com menos variáveis seria mais ou igualmente eficiente de acordo com as métricas escolhidas.
+Para a estimação do modelo de regressão logística foi utilizado o pacote \textbf{glm} do R, que executa uma gama de modelos lineares, com o parâmetro \emph{family} como \emp{binomial} para que ele utilize a regressão logística.
+Para cada droga ou grupo de droga, inicialmente, geramos um modelo utilizando todas as variáveis e obtivemos \textbf{acurácia} e \textbf{sensibilidade}. Depois, foi aplicada a função \textbf{stepAIC} do pacote \textbf{MASS} para determinar se um modelo com menos variáveis seria mais ou igualmente eficiente de acordo com as métricas escolhidas. Utilizamos o parâmetro \emph{backward} para que o algoritmo executado fosse este. Este algoritmo Esta função recebe o modelo completo (objeto gerado pelo \textbf{glm}), inicia com todas as variáveis 
 
 
 
