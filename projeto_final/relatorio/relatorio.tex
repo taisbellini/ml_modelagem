@@ -247,15 +247,17 @@ Para cada droga ou grupo de droga, inicialmente, geramos um modelo utilizando to
 
 \subsection{Cannabis}
 
+A distribuição de usuários e não usuários da amostra 
+
 retomar caracteristicas da amostra
  0   1 
 886 999 
 
+
+
 \subsubsection{Reg logistica}
 
-No caso da regressão logística, utilizando todas as variáveis e o ponto de corte em 0.5, estimamos um modelo com 78.7\% de acurácia, e 84.06\% de sensibilidade. 
-Utilizando a função \textbf{stepAIC} com o parâmetro \emph{direction} definido como \emph{both}, temos um modelo que considera apenas as variáveis independente \textbf{Age, Gender, Education, NScore, OScore, CScore} sem alterar o resultado das métricas. Assim, observamos que EScore(botar o nome certo) e AScore (botar o nome certo) podem ter pouca influência no uso de maconha.
-Alterando o ponto de corte para 0.8, obtivemos uma acurácia de 79.43\% e sensibilidade de 89.86\%. (colocar possivel explicacao)
+No caso da regressão logística, utilizando a função \textbf{stepAIC} com o parâmetro \emph{direction} definido como \emph{backward}, temos um modelo que considera apenas as variáveis independentes \textbf{Age, Gender, Education, OScore, CScore} sem alterar o resultado das métricas. Assim, observamos que EScore(botar o nome certo), AScore (botar o nome certo) e NScore podem ter pouca influência no uso de maconha.
 
 
 \subsubsection{Arvore de decisao}
@@ -321,13 +323,10 @@ Retomar caracteristica da amostra
 
 \subsubsection{Reg logistica}
 
-- resumido, nao apresentar tudo, apenas o que for relevante.
+No caso da regressão logística, utilizando um modelo que considera apenas as variáveis independentes \textbf{Age, Gender, NScore, OScore, CScore, AScore}, definido pela função \textbf{stepAIC} com o parâmetro \emph{direction} \emph{backward}, obtivemos 70.11\% de acuracia e 98.95\% de sensibilidade, definimndo o ponto de corte em 0.75. Estes resultados refletem o fato de a amostra conter muito mais casos negativos do que positivos. 
 
-- comparar full com o reduzido com AIC
+- elaborar na influencia de cada variavel (coef)
 
-- importancia das variaveis
-
-- confusion matriz e resultados (acc, sensibilidade)
 
 \subsubsection{Arvore de decisao}
 ... 
