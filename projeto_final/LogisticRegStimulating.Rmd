@@ -11,6 +11,16 @@ Colocando os dados em variaveis especificas para o experimento:
 
 ```{r}
 dataLogStimulating <- data
+xtabs(~ stimulating_user + CScore, data = dataLogStimulating)
+xtabs(~ stimulating_user + NScore, data = dataLogStimulating)
+xtabs(~ stimulating_user + OScore, data = dataLogStimulating)
+xtabs(~ stimulating_user + AScore, data = dataLogStimulating)
+xtabs(~ stimulating_user + EScore, data = dataLogStimulating)
+xtabs(~ stimulating_user + Gender, data = dataLogStimulating)
+xtabs(~ stimulating_user + Age, data = dataLogStimulating)
+xtabs(~ stimulating_user + Education, data = dataLogStimulating)
+
+table(dataLogStimulating$stimulating_user)
 ```
 
 Separar em treino e teste usando o create data partition que garante distribuicoes similares:
@@ -30,11 +40,13 @@ trainLogStimulating <- subset(trainLogStimulating, select = -c(ID, alcohol_user,
 fullModLogStimulating <- glm(stimulating_user ~ ., data=trainLogStimulating, family = "binomial")
 fullModLogStimulating
 
+```
 
+```{r}
 predFullStimulating <- ifelse(predict(fullModLogStimulating, newdata = testLogStimulating) >= 0.5, 1, 0)
 confusionMatrix(table(predFullStimulating, testLogStimulating$stimulating_user))
-
 ```
+
 
 Ponto de corte em 0.8:
 ```{r}
@@ -52,14 +64,40 @@ confusionMatrix(table(predFullStimulating03, testLogStimulating$stimulating_user
 
 Rodando com stepAIC:
 ```{r}
-stepStimulating <- stepAIC(fullModLogStimulating, direction = "both")
+stepStimulating <- stepAIC(fullModLogStimulating, direction = "backward")
 stepStimulating$anova
 
-predStepStimulating <- ifelse(predict(stepStimulating, newdata = testLogStimulating) >= 0.5, 1, 0)
+```
+
+Resumo
+```{r}
+summary(stepStimulating)
+```
+
+
+```{r}
+predStepStimulating <- ifelse(predict(stepStimulating, newdata = testLogStimulating) >= 0.75, 1, 0)
 confusionMatrix(table(predStepStimulating, testLogStimulating$stimulating_user))
 
 ```
 
+
+```{r}
+library(ggplot2)
+## now we can plot the data
+predicted.data <- data.frame(
+  prob.user=stepStimulating$fitted.values,
+  user=trainLogStimulating$stimulating_user)
+ 
+predicted.data <- predicted.data[
+  order(predicted.data$prob.user, decreasing=FALSE),]
+predicted.data$rank <- 1:nrow(predicted.data)
+ 
+ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
+  geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
+  xlab("Index") +
+  ylab("Predicted probability of being a Stimulating drug user")
+```
 
 Importancia das variaveis: 
 ```{r}
