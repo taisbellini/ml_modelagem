@@ -3,7 +3,6 @@ title: "Trabalho Final - Regressao Logistica"
 output: html_notebook
 ---
 
-
 ## Ecstasy
 
 -> primeiro rodar os chunks do Compilado
@@ -11,106 +10,113 @@ output: html_notebook
 Colocando os dados em variaveis especificas para o experimento:
 
 ```{r}
-dataLog <- data
-dataLog$ecstasy_user <- as.factor(dataLog$ecstasy_user)
+dataLogEcstasy <- data
+xtabs(~ ecstasy_user + CScore, data = dataLogEcstasy)
+xtabs(~ ecstasy_user + NScore, data = dataLogEcstasy)
+xtabs(~ ecstasy_user + OScore, data = dataLogEcstasy)
+xtabs(~ ecstasy_user + AScore, data = dataLogEcstasy)
+xtabs(~ ecstasy_user + EScore, data = dataLogEcstasy)
+xtabs(~ ecstasy_user + Gender, data = dataLogEcstasy)
+xtabs(~ ecstasy_user + Age, data = dataLogEcstasy)
+xtabs(~ ecstasy_user + Education, data = dataLogEcstasy)
+
+table(dataLogEcstasy$ecstasy_user)
 ```
 
 Separar em treino e teste usando o create data partition que garante distribuicoes similares:
 
 ```{r}
 set.seed(205650)
-indexes <- createDataPartition(dataLog$ecstasy_user, p = 0.85, list = FALSE)
-trainLog = dataLog[indexes, ]
-testLog = dataLog[-indexes, ]
+indexes <- createDataPartition(dataLogEcstasy$ecstasy_user, p = 0.85, list = FALSE)
+trainLogEcstasy = dataLogEcstasy[indexes, ]
+testLogEcstasy = dataLogEcstasy[-indexes, ]
 ```
 
 Rodando o glm full model:
 ```{r}
-library(caret)
-trainLogEcstasy <- subset(trainLog, select = -c(ID, alcohol_user, cannabis_user, stimulating_user))
+trainLogEcstasy <- subset(trainLogEcstasy, select = -c(ID, alcohol_user, stimulating_user, cannabis_user))
 
-#varLog <- paste(varLog, collapse = "+")
-#formula <- as.formula(paste("ecstasy_user ~ ", varLog))
-fullModLog <- train(
-  form = ecstasy_user ~ .,
-  data = trainLogEcstasy,
-  trControl = trainControl(method = "boot", number= 100),
-  method = "glm",
-  family = "binomial"
-)
 
-fullModLog <- glm(ecstasy_user ~ ., data=trainLogEcstasy, family = "binomial")
+fullModLogEcstasy <- glm(ecstasy_user ~ ., data=trainLogEcstasy, family = "binomial")
+fullModLogEcstasy
 
-stepEcstasy <- stepAIC(fullModLog, direction = "both")
+```
+
+```{r}
+predFullEcstasy <- ifelse(predict(fullModLogEcstasy, newdata = testLogEcstasy) >= 0.5, 1, 0)
+confusionMatrix(table(predFullEcstasy, testLogEcstasy$ecstasy_user))
+```
+
+
+Ponto de corte em 0.8:
+```{r}
+predFullEcstasy08 <- ifelse(predict(fullModLogEcstasy, newdata = testLogEcstasy) >= 0.8, 1, 0)
+confusionMatrix(table(predFullEcstasy08, testLogEcstasy$ecstasy_user))
+
+```
+
+```{r}
+predFullEcstasy03 <- ifelse(predict(fullModLogEcstasy, newdata = testLogEcstasy) >= 0.3, 1, 0)
+confusionMatrix(table(predFullEcstasy03, testLogEcstasy$ecstasy_user))
+
+```
+
+
+Rodando com stepAIC:
+```{r}
+stepEcstasy <- stepAIC(fullModLogEcstasy, direction = "backward")
 stepEcstasy$anova
-stepEcstasy$model
-names(stepEcstasy)
-
-pred <- predict(stepEcstasy, testLog)
-
-confusionMatrix(pred, testLog$ecstasy_user)
 
 ```
+
+Resumo
+```{r}
+summary(stepEcstasy)
+```
+
 
 ```{r}
-
-calc_acc = function(actual, predicted) {
-  mean(actual == predicted)
-}
-
-calc_acc(actual = testLog$ecstasy_user,
-         predicted = predict(stepEcstasy, newdata = testLog))
+predStepEcstasy <- ifelse(predict(stepEcstasy, newdata = testLogEcstasy) >= 0.75, 1, 0)
+confusionMatrix(table(predStepEcstasy, testLogEcstasy$ecstasy_user))
 
 ```
 
-Temos accuracy de 0.75%
-
-
-
-
-Agora, vamos usar glm com stepwise e tentar melhorar o modelo:
 
 ```{r}
-library(caret)
-trainLogEcstasy <- subset(trainLog, select = -c(ID, alcohol_user, cannabis_user, stimulating_user))
-
-#varLog <- paste(varLog, collapse = "+")
-#formula <- as.formula(paste("ecstasy_user ~ ", varLog))
-stepModLog <- train(
-  form = ecstasy_user ~ .,
-  data = trainLogEcstasy,
-  trControl = trainControl(method = "boot", number= 5),
-  method = "glmStepAIC",
-  family = "binomial"
-)
-
-stepModLog$finalModel
-
+library(ggplot2)
+## now we can plot the data
+predicted.data <- data.frame(
+  prob.user=stepEcstasy$fitted.values,
+  user=trainLogEcstasy$ecstasy_user)
+ 
+predicted.data <- predicted.data[
+  order(predicted.data$prob.user, decreasing=FALSE),]
+predicted.data$rank <- 1:nrow(predicted.data)
+ 
+ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
+  geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
+  xlab("Index") +
+  ylab("Predicted probability of being a Ecstasy drug user")
 ```
-
-77% using stepwise.
 
 Importancia das variaveis: 
 ```{r}
-variableImportance <- varImp(fullModLog, useModel = TRUE , scale = FALSE)
+variableImportance <- varImp(fullModLogEcstasy , scale = FALSE)
 variableImportance
 ```
 
-Rodando o modelo novamente agora somente com as variaveis Age, Gender, Country, EScore, OScore e Cscore:
-```{r}
-fullModLogFilter <- train(
-  form = ecstasy_user ~ Age+Gender+Country+EScore+OScore+CScore,
-  data = trainLogEcstasy,
-  trControl = trainControl(method = "boot", number= 100),
-  method = "glm",
-  family = "binomial"
-)
+Calculando o odds ratio:
+Quando é < 1 a interpretação fica 
 
-fullModLogFilter
-```
+OScoreVeryLow: 0.54 -> Pessoas com esse score baixo tem 46% de chance menor de ser usuario quando comparado as demais classes deste escore.
+
+Ethnicity dar uma olhada na distribuicao para explicar.
+
+OScoreHigh 1.31 -> a chance de ser usuario eh 1.31x maior de ser usuario do que as demais categorias.  
+
 ```{r}
-calc_acc(actual = testLog$ecstasy_user,
-         predicted = predict(fullModLogFilter, newdata = testLog))
+stepEcstasy
+round(exp(coef(stepEcstasy)), 2)
 ```
 
 
