@@ -11,18 +11,21 @@ Colocando os dados em variaveis especificas para o experimento:
 
 ```{r}
 dataLogCannabis <- data
-dataLogCannabis$Age <- as.factor(dataLogCannabis$Age)
-dataLogCannabis$Gender <- as.factor(dataLogCannabis$Gender)
-dataLogCannabis$Education <- as.factor(dataLogCannabis$Education)
-dataLogCannabis$NScore <- as.factor(dataLogCannabis$NScore)
-dataLogCannabis$EScore <- as.factor(dataLogCannabis$EScore)
-dataLogCannabis$AScore <- as.factor(dataLogCannabis$AScore)
-dataLogCannabis$CScore <- as.factor(dataLogCannabis$CScore)
-dataLogCannabis$OScore <- as.factor(dataLogCannabis$OScore)
-dataLogCannabis$cannabis_user <- as.factor(dataLogCannabis$cannabis_user)
 head(dataLogCannabis)
 
 ```
+
+```{r}
+xtabs(~ cannabis_user + CScore, data = dataLogCannabis)
+xtabs(~ cannabis_user + NScore, data = dataLogCannabis)
+xtabs(~ cannabis_user + OScore, data = dataLogCannabis)
+xtabs(~ cannabis_user + AScore, data = dataLogCannabis)
+xtabs(~ cannabis_user + EScore, data = dataLogCannabis)
+xtabs(~ cannabis_user + Gender, data = dataLogCannabis)
+xtabs(~ cannabis_user + Age, data = dataLogCannabis)
+xtabs(~ cannabis_user + Education, data = dataLogCannabis)
+```
+
 
 Separar em treino e teste usando o create data partition que garante distribuicoes similares:
 
@@ -55,15 +58,21 @@ confusionMatrix(table(predFullCannabis, testLogCannabis$cannabis_user))
 StepAIC:
 
 ```{r}
-stepCannabis <- stepAIC(fullModLogCannabis, direction = "both")
+stepCannabis <- stepAIC(fullModLogCannabis, direction = "backward")
 stepCannabis$anova
 predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.5, 1, 0)
 confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
 ```
 
+Resumo:
+```{r}
+summary(stepCannabis)
+```
+
+
 Ponto de corte em 0.8:
 ```{r}
-predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.8, 1, 0)
+predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.3, 1, 0)
 confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
 
 ```
