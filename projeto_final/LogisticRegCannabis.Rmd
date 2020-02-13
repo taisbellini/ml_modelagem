@@ -55,18 +55,12 @@ confusionMatrix(table(predFullCannabis, testLogCannabis$cannabis_user))
 StepAIC:
 
 ```{r}
-stepCannabis <- stepAIC(fullModLogCannabis, direction = "both")
+stepCannabis <- stepAIC(fullModLogCannabis, direction = "backward")
 stepCannabis$anova
 predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.5, 1, 0)
 confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
 ```
 
-Ponto de corte em 0.8:
-```{r}
-predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.8, 1, 0)
-confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
-
-```
 
 
 Importancia das variaveis: 
