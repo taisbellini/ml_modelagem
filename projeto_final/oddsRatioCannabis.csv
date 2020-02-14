@@ -1,0 +1,22 @@
+"","x"
+"Age65+",0.01
+"Age55-64",0.09
+"OScoreVeryLow",0.1
+"Age45-54",0.11
+"Age35-44",0.18
+"OScoreLow",0.32
+"Age25-34",0.38
+"EducationMasters degree",0.74
+"CScoreHigh",0.82
+"EducationUniversity degree",1.14
+"(Intercept)",1.38
+"EducationProfessional certificate/ diploma",1.79
+"CScoreLow",2.02
+"GenderMale",2.36
+"OScoreHigh",2.53
+"EducationLeft school at 18 years",2.81
+"EducationSome college or university, no certificate or degree",2.83
+"CScoreVeryLow",2.97
+"EducationLeft school at 16 years",3.18
+"EducationLeft school at 17 years",3.44
+"EducationLeft school before 16 years",6.13

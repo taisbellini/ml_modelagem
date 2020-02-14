@@ -5,9 +5,9 @@ output: html_notebook
 
 ## Cannabis
 
--> primeiro rodar os chunks do Compilado
+->>> Execute os chunks do compilado antes de rodar os deste arquivo! <<<-
 
-Colocando os dados em variaveis especificas para o experimento:
+Colocando os dados em variáveis específicas para o experimento:
 
 ```{r}
 dataLogCannabis <- data
@@ -15,6 +15,7 @@ head(dataLogCannabis)
 
 ```
 
+Verificando a representatividade em cada categoria das variáveis: 
 ```{r}
 xtabs(~ cannabis_user + CScore, data = dataLogCannabis)
 xtabs(~ cannabis_user + NScore, data = dataLogCannabis)
@@ -37,23 +38,55 @@ testLogCannabis = dataLogCannabis[-indexes, ]
 ```
 
 ```{r}
+table(dataLogCannabis$cannabis_user)
 table(trainLogCannabis$cannabis_user)
 table(dataLogCannabis$cannabis_user)
+
+prop.table(table(dataLogCannabis$cannabis_user))
+prop.table(table(trainLogCannabis$cannabis_user))
+prop.table(table(dataLogCannabis$cannabis_user))
+
 ```
 
 
 Rodando o glm full model:
 ```{r}
-trainLogCannabis <- subset(trainLogCannabis, select = -c(ID, alcohol_user, ecstasy_user, stimulating_user))
+fullModLogCannabis <- glm(cannabis_user ~ Age + Gender + Education + NScore + CScore + OScore + NScore + AScore, data=trainLogCannabis, family = "binomial")
 
-
-fullModLogCannabis <- glm(cannabis_user ~ ., data=trainLogCannabis, family = "binomial")
-
-
-predFullCannabis <- ifelse(predict(fullModLogCannabis, newdata = testLogCannabis) >= 0.5, 1, 0)
-confusionMatrix(table(predFullCannabis, testLogCannabis$cannabis_user))
-
+summary(fullModLogCannabis)
 ```
+
+Testando com ponto de corte em 0.5:
+```{r}
+predFullCannabis <- ifelse(predict(fullModLogCannabis, newdata = testLogCannabis) >= 0.5, 1, 0)
+confusionMatrix(table(predFullCannabis, testLogCannabis$cannabis_user), positive = "1")
+```
+
+
+```{r}
+library(ggplot2)
+predicted.data <- data.frame(
+  prob.user=fullModLogCannabis$fitted.values,
+  user=trainLogCannabis$cannabis_user)
+ 
+predicted.data <- predicted.data[
+  order(predicted.data$prob.user, decreasing=FALSE),]
+predicted.data$rank <- 1:nrow(predicted.data)
+ 
+# Plot a probabilidade de cada individuo ser ou nao usuario e colorir de acordo com o verdadeiro
+ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
+  geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
+  xlab("Indivíduos ordenados") +
+  ylab("Probabilidade predita de ser um usuário de cannabis")
+```
+
+Observamos pelo gráfico que talvez seja interessante mover o ponto de corte para 0.4:
+
+```{r}
+predFullCannabis <- ifelse(predict(fullModLogCannabis, newdata = testLogCannabis) >= 0.4, 1, 0)
+confusionMatrix(table(predFullCannabis, testLogCannabis$cannabis_user), positive = "1")
+```
+
 
 StepAIC:
 
@@ -61,33 +94,10 @@ StepAIC:
 stepCannabis <- stepAIC(fullModLogCannabis, direction = "backward")
 stepCannabis$anova
 predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.5, 1, 0)
-confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
+confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user), positive = "1")
 ```
 
-
-Resumo:
 ```{r}
-summary(stepCannabis)
-```
-
-
-Ponto de corte em 0.8:
-```{r}
-predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.3, 1, 0)
-confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user))
-
-```
-
-Importancia das variaveis: 
-```{r}
-variableImportance <- varImp(fullModLogCannabis , scale = FALSE)
-variableImportance
-```
-
-Plotting:
-```{r}
-library(ggplot2)
-## now we can plot the data
 predicted.data <- data.frame(
   prob.user=stepCannabis$fitted.values,
   user=trainLogCannabis$cannabis_user)
@@ -96,12 +106,32 @@ predicted.data <- predicted.data[
   order(predicted.data$prob.user, decreasing=FALSE),]
 predicted.data$rank <- 1:nrow(predicted.data)
  
-## Lastly, we can plot the predicted probabilities for each sample having
-## heart disease and color by whether or not they actually had heart disease
+# Plot a probabilidade de cada individuo ser ou nao usuario e colorir de acordo com o verdadeiro
 ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
   geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
-  xlab("Index") +
-  ylab("Predicted probability of being a Cannabis user")
+  xlab("Indivíduos ordenados") +
+  ylab("Probabilidade predita de ser um usuário de cannabis")
+
+```
+
+Testando com 0.3:
+```{r}
+predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.35, 1, 0)
+confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user), positive = "1")
+
+```
+
+
+Resumo:
+```{r}
+summary(stepCannabis)
+```
+
+Odds ratio: 
+
+```{r}
+oddsRatioCannabis <- sort(round(exp(coef(stepCannabis)), 2))
+write.csv(oddsRatioCannabis, "oddsRatioCannabis.csv")
 ```
 
 

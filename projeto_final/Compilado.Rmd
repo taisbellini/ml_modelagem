@@ -35,6 +35,17 @@ head(data)
 
 $~$
 
+Verificando que não há valores maiores que 65 (categoria very high):
+```{r}
+max(data$NScore)
+max(data$CScore)
+max(data$EScore)
+max(data$AScore)
+max(data$OScore)
+
+```
+
+
 Convertando os Scores em Categorias:
 
 ```{r}
