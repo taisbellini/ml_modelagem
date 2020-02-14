@@ -1,0 +1,28 @@
+"","x"
+"(Intercept)",1.23
+"Age25-34",0.53
+"Age35-44",0.19
+"Age45-54",0.1
+"Age55-64",0.05
+"Age65+",0
+"GenderMale",2.19
+"EducationLeft school at 16 years",1.09
+"EducationLeft school at 17 years",1.21
+"EducationLeft school at 18 years",1.38
+"EducationLeft school before 16 years",2.52
+"EducationMasters degree",1
+"EducationProfessional certificate/ diploma",1.11
+"EducationSome college or university, no certificate or degree",1.53
+"EducationUniversity degree",0.99
+"CScoreHigh",1.1
+"CScoreLow",1.5
+"CScoreVeryLow",1.53
+"AScoreHigh",1.11
+"AScoreLow",1.24
+"AScoreVeryLow",1.58
+"EScoreHigh",0.87
+"EScoreLow",0.79
+"EScoreVeryLow",0.62
+"OScoreHigh",1.65
+"OScoreLow",0.52
+"OScoreVeryLow",0.55

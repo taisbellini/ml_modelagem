@@ -19,13 +19,16 @@ xtabs(~ ecstasy_user + EScore, data = dataLogEcstasy)
 xtabs(~ ecstasy_user + Gender, data = dataLogEcstasy)
 xtabs(~ ecstasy_user + Age, data = dataLogEcstasy)
 xtabs(~ ecstasy_user + Education, data = dataLogEcstasy)
-
-dataLogEcstasy$control <- ifelse(dataLogEcstasy$ecstasy_user == 1, 3, 1)
-head(dataLogEcstasy)
-
-dataLogEcstasy$control
-table(dataLogEcstasy$ecstasy_user)
 ```
+
+Peso para balancear:
+
+```{r}
+table(dataLogEcstasy$ecstasy_user)
+dataLogEcstasy$control <- ifelse(dataLogEcstasy$ecstasy_user == 1, 3, 1)
+
+```
+
 
 Separar em treino e teste usando o create data partition que garante distribuicoes similares:
 
@@ -36,12 +39,12 @@ trainLogEcstasy = dataLogEcstasy[indexes, ]
 testLogEcstasy = dataLogEcstasy[-indexes, ]
 ```
 
-Rodando o glm full model:
+Rodando o glm full model sem os pesos:
 ```{r}
 #trainLogEcstasy <- subset(trainLogEcstasy, select = -c(ID, alcohol_user, stimulating_user, cannabis_user))
 
 
-fullModLogEcstasy <- glm(ecstasy_user ~ Age+Gender+Education+NScore+CScore+AScore+EScore+OScore, data=trainLogEcstasy, weights = control, family = "binomial")
+fullModLogEcstasy <- glm(ecstasy_user ~ Age+Gender+Education+NScore+CScore+AScore+EScore+OScore, data=trainLogEcstasy, family = "binomial")
 fullModLogEcstasy
 
 ```
