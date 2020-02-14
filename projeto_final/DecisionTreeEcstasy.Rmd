@@ -13,6 +13,20 @@ Colocando os dados em variaveis especificas para o experimento:
 dataDTEcstasy <- data
 ```
 
+Ajeitando as labels:
+```{r}
+library(plyr)
+dataDTEcstasy$Education <- revalue(dataDTEcstasy$Education, c("Doctorate degree"="Ddg", "Left school at 16 years"="LS16", "Left school at 17 years"="LS17", "Left school at 18 years"="LS18", "Left school before 16 years"="LS<16", "Masters degree" = "Mdg", "Professional certificate/ diploma"="Pct", "Some college or university, no certificate or degree"="Uwodg", "University degree"="Udg"))
+dataDTEcstasy$Age <- revalue(dataDTEcstasy$Age, c("18-24" = "J","25-34" = "A1", "35-44" = "A2", "45-54" = "MI1", "55-64" = "MI2", "65+" = "I"))
+dataDTEcstasy$NScore <- revalue(dataDTEcstasy$NScore, c("VeryLow" = "VL", "Low" = "L", "Average" = "A", "High" = "H", "VeryHigh" = "H"))
+dataDTEcstasy$AScore <- revalue(dataDTEcstasy$AScore, c("VeryLow" = "VL", "Low" = "L", "Average" = "A", "High" = "H", "VeryHigh" = "H"))
+dataDTEcstasy$CScore <- revalue(dataDTEcstasy$CScore, c("VeryLow" = "VL", "Low" = "L", "Average" = "A", "High" = "H", "VeryHigh" = "H"))
+dataDTEcstasy$OScore <- revalue(dataDTEcstasy$OScore, c("VeryLow" = "VL", "Low" = "L", "Average" = "A", "High" = "H", "VeryHigh" = "H"))
+dataDTEcstasy$EScore <- revalue(dataDTEcstasy$EScore, c("VeryLow" = "VL", "Low" = "L", "Average" = "A", "High" = "H", "VeryHigh" = "H"))
+dataDTEcstasy$Gender <- revalue(dataDTEcstasy$Gender, c("Female" = "F", "Male" = "M"))
+
+```
+
 Separar em treino e teste usando o create data partition que garante distribuicoes similares:
 
 ```{r}
@@ -21,8 +35,8 @@ library(caret)
 indexes <- createDataPartition(dataDTEcstasy$ecstasy_user, p = 0.85, list = FALSE)
 trainDTEcstasy = dataDTEcstasy[indexes, ]
 testDTEcstasy = dataDTEcstasy[-indexes, ]
-trainDTEcstasy <- subset(trainDTEcstasy, select = -c(ID, alcohol_user, cannabis_user, stimulating_user, Country, Ethnicity))
-testDTEcstasy <- subset(testDTEcstasy, select = -c(ID, alcohol_user, cannabis_user, stimulating_user, Country, Ethnicity))
+trainDTEcstasy <- subset(trainDTEcstasy, select = -c(ID, alcohol_user, cannabis_user, stimulating_user))
+testDTEcstasy <- subset(testDTEcstasy, select = -c(ID, alcohol_user, cannabis_user, stimulating_user))
 
 ```
 
@@ -75,39 +89,87 @@ ctable_train$byClass
 ctable_test$byClass
 ```
 
-Plot feio (mas melhor de enxergar árvore completa):
-```{r}
-par(xpd = NA)
-plot(model_fit, uniform=TRUE,
-   main="Classification Tree")
-text(model_fit, use.n=TRUE, all=TRUE, cex=.8)
-
-```
-
-Plot bonito:
-```{r}
-library(rpart.plot)
-rpart.plot(model_fit, yesno = 2, tweak = 1)
-```
-
-Plot ainda mais bonito:
+Plot da árvore:
 
 ```{r}
 #install.packages('rattle')
 library(rattle)
 library(RColorBrewer)
-fancyRpartPlot(model_fit, caption = NULL)
+png('arvore_ecstasy.png')
+fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds"))
+dev.off()
 ```
 
+A Sensibilidade (TP rate ou probabilidade de detecção) do ajuste está baixa. Vamos tentar dar mais peso para erros de classificar usuários como não usuários:
+
+```{r}
+#install.packages("rpart")
+library(rpart)
+model_fit_loss <- rpart(ecstasy_user~Age+Gender+Education+NScore+EScore+OScore+AScore+CScore, data = trainDTEcstasy, method = "class", control = list(minsplit = 20), parms = list(loss=matrix(c(0,1,2,0), byrow=TRUE, nrow=2)))
+
+predicted_train_loss <- predict(model_fit_loss, newdata = trainDTEcstasy, "class")
+predicted_test_loss <- predict(model_fit_loss, newdata = testDTEcstasy, "class")
+
+```
+
+Importância de cada Variável:
+
+```{r}
+summary(model_fit_loss)
+```
+
+Variáveis que foram efetivamente utilizadas pra gerar a árvore:
+
+```{r}
+printcp(model_fit_loss)
+```
+
+Gerando as Matrizes de Confusão:
+
+```{r}
+ctable_train_loss <- confusionMatrix(predicted_train_loss, as.factor(trainDTEcstasy$ecstasy_user), positive = "1")
+ctable_test_loss <- confusionMatrix(predicted_test_loss, as.factor(testDTEcstasy$ecstasy_user), positive = "1")
+ctable_train_loss$table
+ctable_test_loss$table
+
+```
+
+Analisando a Acurácia dos Ajustes:
+
+```{r}
+print("train")
+ctable_train_loss$overall['Accuracy']
+print("test")
+ctable_test_loss$overall['Accuracy']
+
+```
+
+Analisando as demais medidas do ajuste (sensibilidade, especificidade, etc):
+
+```{r}
+ctable_train_loss$byClass
+ctable_test_loss$byClass
+```
+
+Plot da árvore:
+
+```{r}
+#install.packages('rattle')
+library(rattle)
+library(RColorBrewer)
+png('arvore_ecstasy_pesada.png')
+fancyRpartPlot(model_fit_loss, yesno = 2, caption = NULL, palettes=c("Blues", "Reds"))
+dev.off()
+```
 
 Podando a árvore:
 ("A rule of thumb is to choose the lowest level where rel_error + xstd < xerror." rel_error = erro relativo, x-error = erro de cross-validation, xstd = desvio padrão de cross-validation)
 
 ```{r}
-optim_table = data.frame(model_fit$cptable)
+optim_table = data.frame(model_fit_loss$cptable)
 optim_table = optim_table[optim_table$rel.error + optim_table$xstd < optim_table$xerror, ]
 cp_min = optim_table[which.min(optim_table[,"xerror"]),"CP"]
-pfit<- prune(model_fit, cp= cp_min)
+pfit<- prune(model_fit_loss, cp= cp_min)
 
 predicted_train_pruned <- predict(pfit, newdata = trainDTEcstasy, "class")
 predicted_test_pruned <- predict(pfit, newdata = testDTEcstasy, "class")
@@ -152,23 +214,13 @@ ctable_train_pruned$byClass
 ctable_test_pruned$byClass
 ```
 
-Plot feio da árvore podada:
-```{r}
-par(xpd = NA)
-plot(pfit, uniform=TRUE,
-   main="Árvore de Decisão Podada para Ecstasy")
-text(pfit, use.n=TRUE, all=TRUE, cex=.8)
-
-```
-
-Plot bonito da árvore podada:
+Plot da árvore podada:
 
 ```{r}
-rpart.plot(pfit, yesno = 2, tweak = 1)
-```
-
-Plot ainda mais bonito da árvore podada:
-
-```{r}
-fancyRpartPlot(pfit, caption = NULL)
+#install.packages('rattle')
+library(rattle)
+library(RColorBrewer)
+png('arvore_ecstasy_podada.png')
+fancyRpartPlot(pfit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds"))
+dev.off()
 ```
