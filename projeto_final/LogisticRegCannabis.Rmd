@@ -62,6 +62,10 @@ predFullCannabis <- ifelse(predict(fullModLogCannabis, newdata = testLogCannabis
 confusionMatrix(table(predFullCannabis, testLogCannabis$cannabis_user), positive = "1")
 ```
 
+```{r}
+110/(110+39)
+```
+
 
 ```{r}
 library(ggplot2)
@@ -107,14 +111,19 @@ predicted.data <- predicted.data[
 predicted.data$rank <- 1:nrow(predicted.data)
  
 # Plot a probabilidade de cada individuo ser ou nao usuario e colorir de acordo com o verdadeiro
-ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
+probCannabis <- ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
   geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
   xlab("Indivíduos ordenados") +
-  ylab("Probabilidade predita de ser um usuário de cannabis")
+  ylab("Probabilidade predita de ser um usuário de Cannabis") +
+  labs(color="Usuário") +
+  scale_color_hue(labels = c("Não", "Sim"))
 
+probCannabis
+
+ggsave("LogRegCannabis.png", plot = probCannabis)
 ```
 
-Testando com 0.3:
+Testando com 0.35:
 ```{r}
 predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.35, 1, 0)
 confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user), positive = "1")
@@ -127,14 +136,21 @@ Resumo:
 summary(stepCannabis)
 ```
 
+```{r}
+coefsCannabis <- stepCannabis$coefficients
+write.csv(coefsCannabis, "coefsCannabis.csv")
+```
+
+
 Odds ratio: 
 
 ```{r}
 oddsRatioCannabis <- sort(round(exp(coef(stepCannabis)), 2))
 write.csv(oddsRatioCannabis, "oddsRatioCannabis.csv")
+oddsRatioCannabis
 ```
 
-
+1-0.01
 
 ## Referencias
 http://www.sthda.com/english/articles/36-classification-methods-essentials/150-stepwise-logistic-regression-essentials-in-r/
