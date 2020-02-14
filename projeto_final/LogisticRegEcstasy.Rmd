@@ -115,7 +115,7 @@ variableImportance
 Calculando o odds ratio:
 Quando é < 1 a interpretação fica 
 
-OScoreVeryLow: 0.54 -> Pessoas com esse score baixo tem 46% de chance menor de ser usuario quando comparado as demais classes deste escore.
+OScoreVeryLow: 0.54 -> Pessoas com esse score baixo tem 46% de chance menor de ser usuario quando comparado a base desse score
 
 Ethnicity dar uma olhada na distribuicao para explicar.
 
