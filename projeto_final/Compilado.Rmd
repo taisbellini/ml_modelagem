@@ -4,8 +4,6 @@ output: html_notebook
 ---
 # Introdução
 
-$~$
-
 Instalar pacotes necessários: 
 
 ```{r}
@@ -15,8 +13,6 @@ install.packages("MASS")
 install.packages("e1071")
 ```
 
-$~$
-
 Carregar bibliotecas necessarias: 
 ```{r}
 library(caret)
@@ -25,15 +21,12 @@ library(MASS)
 library(e1071)
 ```
 
-
 Carregando os dados:
 
 ```{r}
 data <- readxl::read_xlsx("drug_consumption_dataset.xlsx")
 head(data)
 ```
-
-$~$
 
 Verificando que não há valores maiores que 65 (categoria very high):
 ```{r}
@@ -44,7 +37,6 @@ max(data$AScore)
 max(data$OScore)
 
 ```
-
 
 Convertando os Scores em Categorias:
 
@@ -74,7 +66,25 @@ for(col in scores){
 head(data)
 ```
 
-$~$
+Agrupando entradas com baixa contagem de observações:
+
+```{r}
+for (row in 1:nrow(data)){
+  if(data[row, "Age"] == "45-54" | data[row, "Age"] == "55-64" | data[row, "Age"] == "65+"){
+    data[row, "Age"] = "45+"
+  }
+}
+
+for (row in 1:nrow(data)){
+  if(data[row, "Education"] == "Left school at 16 years" | data[row, "Education"] == "Left school at 17 years" | data[row, "Education"] == "Left school at 18 years" | data[row, "Education"] == "Left school before 16 years"){
+    data[row, "Education"] = "Left school"
+  }
+  if(data[row, "Education"] == "Doctorate degree" | data[row, "Education"] == "Masters degree"){
+    data[row, "Education"] = "Graduate degree"
+  }
+}
+head(data)
+```
 
 Classificando os usuários e não-usuários das drogas escolhidas de acordo com o que foi previamente definido pelo grupo:
 
@@ -115,7 +125,12 @@ data <- transform(data, stimulating_user =
 head(data)
 ```
 
-$~$
+Excluindo entradas de usuários que responderam que já utilizaram uma droga fictícia (Semeron), introduzida no banco justamente para identificar participantes que possam estar exagerando em suas respostas sobre o uso de drogas:
+
+```{r}
+data <- data[data$Semer == "Never Used", ]
+```
+
 
 Excluindo as variáveis não relevantes para a análise:
 
@@ -144,9 +159,6 @@ data$stimulating_user <- as.factor(data$stimulating_user)
 
 ```
 
-
-$~$
-
 Introdução de variáveis dummy caso o modelo precise:
 ```{r}
 data_dummy <- dummy_cols(data, remove_selected_columns = TRUE)
@@ -162,10 +174,8 @@ write.csv2(data, file="drug_use_data.csv")
 write.csv2(data_dummy, file="drug_use_data_dummy.csv")
 ```
 
-
-$~$
-
 Divisão dos dados entre treino e teste:
+
 ```{r}
 # Funcao para dividir dados aleatoriamente em treinamento e teste #
 split_data = function(data, train_perc){
@@ -184,9 +194,3 @@ train <- splitted_data$train
 test <- splitted_data$test
 
 ```
-
-$~$
-
-# TO DO: Métodos de Classificação
-
-to do: adicionar métodos de classificação  
