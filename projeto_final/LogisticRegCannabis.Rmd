@@ -145,6 +145,10 @@ write.csv(oddsRatioCannabis, "oddsRatioCannabis.csv")
 oddsRatioCannabis
 ```
 
+```{r}
+paste(round(stepCannabis$coefficients, 4), names(stepCannabis$coefficients), sep = "*", collapse = " ")
+```
+
 
 ## Referencias
 http://www.sthda.com/english/articles/36-classification-methods-essentials/150-stepwise-logistic-regression-essentials-in-r/

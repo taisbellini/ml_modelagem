@@ -15,6 +15,15 @@ dataLogAlcohol <- data
 head(dataLogAlcohol)
 ```
 
+Adicionar peso no db:
+```{r}
+table(dataLogAlcohol$alcohol_user)
+135/(135+1742)
+prop.table(table(dataLogAlcohol$alcohol_user))
+dataLogAlcohol$control <- ifelse(dataLogAlcohol$alcohol_user == 0, 8, 1)
+```
+
+
 Separar em treino e teste usando o create data partition que garante distribuicoes similares:
 
 ```{r}
@@ -35,13 +44,31 @@ table(dataLogAlcohol$alcohol_user)
 
 Remover variaveis das outras drogas. Rodar o glm full model com ponto de corte em 0.5:
 ```{r}
-trainLogAlcohol <- subset(trainLogAlcohol, select = -c(ID, ecstasy_user, cannabis_user, stimulating_user))
-
-fullModLogAlcohol <- glm(alcohol_user ~ ., data=trainLogAlcohol, family = "binomial")
+fullModLogAlcohol <- glm(alcohol_user ~ Age+Gender+Education+NScore+CScore+AScore+EScore+OScore, data=trainLogAlcohol, family = "binomial", weights = control)
 
 predFullAlcohol <- ifelse(predict(fullModLogAlcohol, newdata = testLogAlcohol) >= 0.5, 1, 0)
 predFullAlcohol <- factor(predFullAlcohol, levels = 0:1)
-confusionMatrix(table(predFullAlcohol, testLogAlcohol$alcohol_user))
+confusionMatrix(table(predFullAlcohol, testLogAlcohol$alcohol_user), positive = "1")
+
+```
+
+
+```{r}
+predicted.data <- data.frame(
+  prob.user=stepStimulatingWeighted$fitted.values,
+  user=trainLogStimulating$stimulating_user)
+ 
+predicted.data <- predicted.data[
+  order(predicted.data$prob.user, decreasing=FALSE),]
+predicted.data$rank <- 1:nrow(predicted.data)
+ 
+probEstimulantes <- ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
+  geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
+  xlab("Indivíduos ordenados") +
+  ylab("Probabilidade predita de ser usuário de drogas estimulantes") + 
+  labs(color="Usuário") +
+  scale_color_hue(labels = c("Não", "Sim"))
+probEstimulantes
 
 ```
 
@@ -49,14 +76,34 @@ confusionMatrix(table(predFullAlcohol, testLogAlcohol$alcohol_user))
 Filtrando variaveis com stepwise: 
 
 ```{r}
-stepAlcohol <- stepAIC(fullModLogAlcohol, direction = "both")
+stepAlcohol <- stepAIC(fullModLogAlcohol, direction = "backward")
 stepAlcohol$anova
 
-predStepAlcohol <- ifelse(predict(stepAlcohol, newdata = testLogAlcohol) >= 0.5, 1, 0)
+predStepAlcohol <- ifelse(predict(stepAlcohol, newdata = trainLogAlcohol) >= 0.5, 1, 0)
 predStepAlcohol <- factor(predStepAlcohol, levels = 0:1)
-confusionMatrix(table(predStepAlcohol, testLogAlcohol$alcohol_user))
+confusionMatrix(table(predStepAlcohol, trainLogAlcohol$alcohol_user))
 
 ```
+
+```{r}
+predicted.data <- data.frame(
+  prob.user=stepAlcohol$fitted.values,
+  user=trainLogAlcohol$stimulating_user)
+ 
+predicted.data <- predicted.data[
+  order(predicted.data$prob.user, decreasing=FALSE),]
+predicted.data$rank <- 1:nrow(predicted.data)
+ 
+probEstimulantes <- ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
+  geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
+  xlab("Indivíduos ordenados") +
+  ylab("Probabilidade predita de ser usuário de drogas estimulantes") + 
+  labs(color="Usuário") +
+  scale_color_hue(labels = c("Não", "Sim"))
+probEstimulantes
+
+```
+
 
 Acuracia do treino:
 ```{r}
