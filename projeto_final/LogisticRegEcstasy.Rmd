@@ -25,6 +25,7 @@ Peso para balancear:
 
 ```{r}
 table(dataLogEcstasy$ecstasy_user)
+prop.table(table(dataLogEcstasy$ecstasy_user))
 dataLogEcstasy$control <- ifelse(dataLogEcstasy$ecstasy_user == 1, 3, 1)
 
 ```
@@ -49,26 +50,6 @@ fullModLogEcstasy
 
 ```
 
-```{r}
-predFullEcstasy <- ifelse(predict(fullModLogEcstasy, newdata = testLogEcstasy) >= 0.5, 1, 0)
-predFullEcstasy
-confusionMatrix(table(predFullEcstasy, testLogEcstasy$ecstasy_user), positive = "1")
-```
-
-
-Ponto de corte em 0.8:
-```{r}
-predFullEcstasy08 <- ifelse(predict(fullModLogEcstasy, newdata = testLogEcstasy) >= 0.8, 1, 0)
-confusionMatrix(table(predFullEcstasy08, testLogEcstasy$ecstasy_user))
-
-```
-
-```{r}
-predFullEcstasy03 <- ifelse(predict(fullModLogEcstasy, newdata = testLogEcstasy) >= 0.3, 1, 0)
-confusionMatrix(table(predFullEcstasy03, testLogEcstasy$ecstasy_user), positive = "1")
-
-```
-
 
 Rodando com stepAIC:
 ```{r}
@@ -82,10 +63,11 @@ Resumo
 summary(stepEcstasy)
 ```
 
+Testando step sem pessos no conjunto de treino:
 
 ```{r}
-predStepEcstasy <- ifelse(predict(stepEcstasy, newdata = testLogEcstasy) >= 0.4, 1, 0)
-confusionMatrix(table(predStepEcstasy, testLogEcstasy$ecstasy_user), positive="1")
+predStepEcstasyTrain <- ifelse(predict(stepEcstasy, newdata = trainLogEcstasy) >= 0.5, 1, 0)
+confusionMatrix(table(predStepEcstasyTrain, trainLogEcstasy$ecstasy_user), positive="1")
 
 ```
 
@@ -101,13 +83,72 @@ predicted.data <- predicted.data[
   order(predicted.data$prob.user, decreasing=FALSE),]
 predicted.data$rank <- 1:nrow(predicted.data)
  
-ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
+probEcstasy <- ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
   geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
   xlab("Indivíduos ordenados") +
   ylab("Probabilidade predita de ser usuário de Ecstasy") + 
   labs(color="Usuário") +
   scale_color_hue(labels = c("Não", "Sim"))
+probEcstasy
+
+ggsave("LogRegEcstasy.png", plot = probEcstasy)
 ```
+
+
+Rodando full model com pesos:
+
+```{r}
+fullModLogEcstasyWeighted <- glm(ecstasy_user ~ Age+Gender+Education+NScore+CScore+AScore+EScore+OScore, data=trainLogEcstasy, weights = control, family = "binomial")
+fullModLogEcstasyWeighted
+```
+
+Selecao de variaveis:
+
+```{r}
+stepEcstasyWeighted <- stepAIC(fullModLogEcstasyWeighted, direction = "backward")
+stepEcstasyWeighted$anova
+
+```
+
+
+resultados do modelo balanceado no conjunto de treino:
+
+```{r}
+predStepEcstasyWeighted <- ifelse(predict(stepEcstasyWeighted, newdata = trainLogEcstasy) >= 0.5, 1, 0)
+confusionMatrix(table(predStepEcstasyWeighted, trainLogEcstasy$ecstasy_user), positive="1")
+
+```
+
+Plot das probabilidades:
+```{r}
+library(ggplot2)
+## now we can plot the data
+predicted.data <- data.frame(
+  prob.user=stepEcstasyWeighted$fitted.values,
+  user=trainLogEcstasy$ecstasy_user)
+ 
+predicted.data <- predicted.data[
+  order(predicted.data$prob.user, decreasing=FALSE),]
+predicted.data$rank <- 1:nrow(predicted.data)
+ 
+probEcstasyWeightedTrain <- ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
+  geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
+  xlab("Indivíduos ordenados") +
+  ylab("Probabilidade predita de ser usuário de Ecstasy") + 
+  labs(color="Usuário") +
+  scale_color_hue(labels = c("Não", "Sim"))
+probEcstasyWeightedTrain
+
+ggsave("LogRegEcstasyWeighted.png", plot = probEcstasyWeightedTrain)
+```
+
+Testando no conjunto de teste:
+
+```{r}
+predStepEcstasyWeightedTest <- ifelse(predict(stepEcstasyWeighted, newdata = testLogEcstasy) >= 0.5, 1, 0)
+confusionMatrix(table(predStepEcstasyWeightedTest, testLogEcstasy$ecstasy_user), positive="1")
+```
+
 
 Importancia das variaveis: 
 ```{r}
@@ -125,8 +166,21 @@ Ethnicity dar uma olhada na distribuicao para explicar.
 OScoreHigh 1.31 -> a chance de ser usuario eh 1.31x maior de ser usuario do que as demais categorias.  
 
 ```{r}
-stepEcstasy
-round(exp(coef(stepEcstasy)), 2)
+sort(round(exp(coef(stepEcstasyWeighted)), 2))
+```
+
+Export stuff:
+
+```{r}
+coefsEcstasy <- stepEcstasyWeighted$coefficients
+write.csv(coefsEcstasy, "coefsEcstasy.csv")
+```
+
+Odds ratio: 
+
+```{r}
+oddsRatioEcstasy <- (round(exp(coef(stepEcstasyWeighted)), 2))
+write.csv(oddsRatioEcstasy, "oddsRatioEcstasy.csv")
 ```
 
 
