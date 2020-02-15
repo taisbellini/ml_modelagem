@@ -17,8 +17,8 @@ Ajeitando as labels:
 
 ```{r}
 library(plyr)
-dataDTCannabis$Education <- revalue(dataDTCannabis$Education, c("Doctorate degree"="Ddg", "Left school at 16 years"="LS16", "Left school at 17 years"="LS17", "Left school at 18 years"="LS18", "Left school before 16 years"="LS<16", "Masters degree" = "Mdg", "Professional certificate/ diploma"="Pct", "Some college or university, no certificate or degree"="Uwodg", "University degree"="Udg"))
-dataDTCannabis$Age <- revalue(dataDTCannabis$Age, c("18-24" = "J","25-34" = "A1", "35-44" = "A2", "45-54" = "MI1", "55-64" = "MI2", "65+" = "I"))
+dataDTCannabis$Education <- revalue(dataDTCannabis$Education, c("Graduate degree"="Gdg", "Left school"="LS", "Professional certificate/ diploma"="Pct", "Some college or university, no certificate or degree"="Uwodg", "University degree"="Udg"))
+dataDTCannabis$Age <- revalue(dataDTCannabis$Age, c("18-24" = "J","25-34" = "JA", "35-44" = "A", "45+" = "MI+"))
 dataDTCannabis$NScore <- revalue(dataDTCannabis$NScore, c("VeryLow" = "VL", "Low" = "L", "Average" = "A", "High" = "H", "VeryHigh" = "H"))
 dataDTCannabis$AScore <- revalue(dataDTCannabis$AScore, c("VeryLow" = "VL", "Low" = "L", "Average" = "A", "High" = "H", "VeryHigh" = "H"))
 dataDTCannabis$CScore <- revalue(dataDTCannabis$CScore, c("VeryLow" = "VL", "Low" = "L", "Average" = "A", "High" = "H", "VeryHigh" = "H"))
