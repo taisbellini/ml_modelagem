@@ -66,6 +66,34 @@ for(col in scores){
 head(data)
 ```
 
+Plotando as distribuições das variáveis Age, Gender, Education, Country e Ethnicity:
+```{r}
+library(RColorBrewer)
+png('dist_idade.png')
+barplot(table(data$Age),
+   xlab="Age", col = brewer.pal(6, "PuRd"), ylim = c(0,700))
+dev.off()
+png('dist_genero.png')
+barplot(table(data$Gender),
+   xlab="Gender", col = brewer.pal(2, "Pastel2"), ylim = c(0,1000))
+dev.off()
+png('dist_educacao.png')
+par(mar=c(4,12,4,4))
+barplot(table(data$Education),
+   xlab="Education", col = brewer.pal(9, "Pastel1"), cex.names=0.5, las = 2, horiz = TRUE)
+dev.off()
+png('dist_pais.png')
+par(mar=c(4,9,4,4))
+barplot(table(data$Country),
+   xlab="Country", col = brewer.pal(6, "Set3"), las =2, xlim = c(0,1200), horiz = TRUE)
+dev.off()
+png('dist_etnia.png')
+par(mar=c(4,8,4,4))
+barplot(table(data$Ethnicity),
+   xlab="Ethnicity", col = brewer.pal(7, "Dark2"), las = 2, horiz = TRUE, xlim = c(0,2000))
+dev.off()
+```
+
 Agrupando entradas com baixa contagem de observações:
 
 ```{r}
@@ -158,6 +186,63 @@ data$ecstasy_user <- as.factor(data$ecstasy_user)
 data$stimulating_user <- as.factor(data$stimulating_user)
 
 ```
+
+Plotando as distribuições dos Scores:
+```{r}
+library(RColorBrewer)
+library(plyr)
+png('dist_nscore.png')
+nscore <- ordered(data$NScore, levels = c("VeryLow", "Low", "Average", "High", "VeryHigh"))
+barplot(table(nscore),
+   xlab="NScore", col = brewer.pal(5, "Purples"), ylim=c(0,1000))
+dev.off()
+png('dist_escore.png')
+escore <- ordered(data$EScore, levels = c("VeryLow", "Low", "Average", "High", "VeryHigh"))
+barplot(table(escore),
+   xlab="EScore", col = brewer.pal(5, "YlOrRd"), ylim=c(0,1000))
+dev.off()
+png('dist_oscore.png')
+oscore <- ordered(data$OScore, levels = c("VeryLow", "Low", "Average", "High", "VeryHigh"))
+barplot(table(oscore),
+   xlab="OScore", col = brewer.pal(5, "RdPu"), ylim=c(0,1000))
+dev.off()
+png('dist_ascore.png')
+ascore <- ordered(data$AScore, levels = c("VeryLow", "Low", "Average", "High", "VeryHigh"))
+barplot(table(ascore),
+   xlab="AScore", col = brewer.pal(5, "Reds"), ylim=c(0,1000))
+dev.off()
+png('dist_cscore.png')
+cscore <- ordered(data$CScore, levels = c("VeryLow", "Low", "Average", "High", "VeryHigh"))
+barplot(table(cscore),
+   xlab="CScore", col = brewer.pal(5, "YlGn"), ylim=c(0,1000))
+dev.off()
+```
+
+Plotando as distribuições de Usuários:
+
+```{r}
+library(RColorBrewer)
+library(plyr)
+png('dist_user_alcohol.png')
+barplot(table(data$alcohol_user),
+   xlab="Alcohol User", col = c("green", "red"), names = c("Non-User", "User"), ylim= c(0,2000))
+dev.off()
+png('dist_user_cannabis.png')
+barplot(table(data$cannabis_user),
+   xlab="Cannabis User", col = c("green", "red"), names = c("Non-User", "User"), ylim= c(0,1000))
+dev.off()
+png('dist_user_ecstasy.png')
+barplot(table(data$ecstasy_user),
+   xlab="Ecstasy User", col = c("green", "red"), names = c("Non-User", "User"), ylim= c(0,1500))
+dev.off()
+png('dist_user_stimulating.png')
+barplot(table(data$stimulating_user),
+   xlab="Stimulating User", col = c("green", "red"), names = c("Non-User", "User"), ylim= c(0,1500))
+dev.off()
+
+
+```
+
 
 Introdução de variáveis dummy caso o modelo precise:
 ```{r}
