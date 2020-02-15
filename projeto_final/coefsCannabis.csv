@@ -1,22 +1,19 @@
 "","x"
-"(Intercept)",0.322455370294113
-"Age25-34",-0.976455208842454
-"Age35-44",-1.71086903193638
-"Age45-54",-2.20966760537504
-"Age55-64",-2.3827680898742
-"Age65+",-4.33924175357018
-"GenderMale",0.86076458722538
-"EducationLeft school at 16 years",1.15841010603176
-"EducationLeft school at 17 years",1.23422748589876
-"EducationLeft school at 18 years",1.03171821866461
-"EducationLeft school before 16 years",1.81278359718174
-"EducationMasters degree",-0.300451412587141
-"EducationProfessional certificate/ diploma",0.582835597383747
-"EducationSome college or university, no certificate or degree",1.0394984601363
-"EducationUniversity degree",0.131368554009384
-"CScoreHigh",-0.196646653019377
-"CScoreLow",0.704188703671091
-"CScoreVeryLow",1.09014751769425
-"OScoreHigh",0.929170530595371
-"OScoreLow",-1.13713365007745
-"OScoreVeryLow",-2.34812552589056
+"(Intercept)",0.392426745099468
+"Age25-34",-1.03295767780358
+"Age35-44",-1.77187317259814
+"Age45+",-2.26430966722577
+"GenderMale",0.908064679629811
+"EducationLeft school",1.38355078757025
+"EducationProfessional certificate/ diploma",0.764145117126775
+"EducationSome college or university, no certificate or degree",1.25400528101218
+"EducationUniversity degree",0.465772913316868
+"NScoreHigh",-0.782057119572688
+"NScoreLow",-0.332219068246639
+"NScoreVeryLow",-0.429872177999009
+"CScoreHigh",0.0836649243124266
+"CScoreLow",0.638841700357129
+"CScoreVeryLow",1.07555901736387
+"OScoreHigh",0.908306497354382
+"OScoreLow",-1.07395010219201
+"OScoreVeryLow",-2.1160488780339

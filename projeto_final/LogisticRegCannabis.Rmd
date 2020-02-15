@@ -12,7 +12,6 @@ Colocando os dados em variáveis específicas para o experimento:
 ```{r}
 dataLogCannabis <- data
 head(dataLogCannabis)
-
 ```
 
 Verificando a representatividade em cada categoria das variáveis: 
@@ -56,14 +55,10 @@ fullModLogCannabis <- glm(cannabis_user ~ Age + Gender + Education + NScore + CS
 summary(fullModLogCannabis)
 ```
 
-Testando com ponto de corte em 0.5:
+Testando o full no treino com ponto de corte em 0.5:
 ```{r}
-predFullCannabis <- ifelse(predict(fullModLogCannabis, newdata = testLogCannabis) >= 0.5, 1, 0)
-confusionMatrix(table(predFullCannabis, testLogCannabis$cannabis_user), positive = "1")
-```
-
-```{r}
-110/(110+39)
+predFullCannabisTrain <- ifelse(predict(fullModLogCannabis, newdata = trainLogCannabis) >= 0.5, 1, 0)
+confusionMatrix(table(predFullCannabisTrain, trainLogCannabis$cannabis_user), positive = "1")
 ```
 
 
@@ -84,21 +79,14 @@ ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
   ylab("Probabilidade predita de ser um usuário de cannabis")
 ```
 
-Observamos pelo gráfico que talvez seja interessante mover o ponto de corte para 0.4:
-
-```{r}
-predFullCannabis <- ifelse(predict(fullModLogCannabis, newdata = testLogCannabis) >= 0.4, 1, 0)
-confusionMatrix(table(predFullCannabis, testLogCannabis$cannabis_user), positive = "1")
-```
-
-
-StepAIC:
+StepAIC e verificando dados de treino com corte 0.5:
 
 ```{r}
 stepCannabis <- stepAIC(fullModLogCannabis, direction = "backward")
 stepCannabis$anova
-predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.5, 1, 0)
-confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user), positive = "1")
+stepCannabis$coefficients
+predStepCannabisTrain <- ifelse(predict(stepCannabis, newdata = trainLogCannabis) >= 0.5, 1, 0)
+confusionMatrix(table(predStepCannabisTrain, trainLogCannabis$cannabis_user), positive = "1")
 ```
 
 ```{r}
@@ -111,23 +99,30 @@ predicted.data <- predicted.data[
 predicted.data$rank <- 1:nrow(predicted.data)
  
 # Plot a probabilidade de cada individuo ser ou nao usuario e colorir de acordo com o verdadeiro
-probCannabis <- ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
+probCannabisTrain <- ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
   geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
   xlab("Indivíduos ordenados") +
   ylab("Probabilidade predita de ser um usuário de Cannabis") +
   labs(color="Usuário") +
   scale_color_hue(labels = c("Não", "Sim"))
 
-probCannabis
+probCannabisTrain
 
-ggsave("LogRegCannabis.png", plot = probCannabis)
+ggsave("LogRegCannabisTrain.png", plot = probCannabisTrain)
 ```
 
-Testando com 0.35:
+Testando com 0.3:
 ```{r}
-predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.35, 1, 0)
-confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user), positive = "1")
+predStepCannabis <- ifelse(predict(stepCannabis, newdata = trainLogCannabis) >= 0.3, 1, 0)
+confusionMatrix(table(predStepCannabis, trainLogCannabis$cannabis_user), positive = "1")
 
+```
+
+Testando no conjunto de teste:
+
+```{r}
+predStepCannabis <- ifelse(predict(stepCannabis, newdata = testLogCannabis) >= 0.3, 1, 0)
+confusionMatrix(table(predStepCannabis, testLogCannabis$cannabis_user), positive = "1")
 ```
 
 
@@ -150,7 +145,6 @@ write.csv(oddsRatioCannabis, "oddsRatioCannabis.csv")
 oddsRatioCannabis
 ```
 
-1-0.01
 
 ## Referencias
 http://www.sthda.com/english/articles/36-classification-methods-essentials/150-stepwise-logistic-regression-essentials-in-r/
