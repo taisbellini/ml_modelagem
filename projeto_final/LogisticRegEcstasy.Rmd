@@ -183,6 +183,10 @@ oddsRatioEcstasy <- (round(exp(coef(stepEcstasyWeighted)), 2))
 write.csv(oddsRatioEcstasy, "oddsRatioEcstasy.csv")
 ```
 
+```{r}
+paste(round(stepEcstasyWeighted$coefficients, 4), names(stepEcstasyWeighted$coefficients), sep = "*", collapse = " ")
+```
+
 
 
 ## Referencias

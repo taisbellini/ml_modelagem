@@ -23,6 +23,14 @@ xtabs(~ stimulating_user + Education, data = dataLogStimulating)
 table(dataLogStimulating$stimulating_user)
 ```
 
+
+```{r}
+table(dataLogStimulating$stimulating_user)
+prop.table(table(dataLogStimulating$stimulating_user))
+dataLogStimulating$control <- ifelse(dataLogStimulating$stimulating_user == 1, 2, 1)
+```
+
+
 Separar em treino e teste usando o create data partition que garante distribuicoes similares:
 
 ```{r}
@@ -34,31 +42,14 @@ testLogStimulating = dataLogStimulating[-indexes, ]
 
 Rodando o glm full model:
 ```{r}
-trainLogStimulating <- subset(trainLogStimulating, select = -c(ID, alcohol_user, ecstasy_user, cannabis_user))
-
-
-fullModLogStimulating <- glm(stimulating_user ~ ., data=trainLogStimulating, family = "binomial")
+fullModLogStimulating <- glm(stimulating_user ~ Age+Gender+Education+NScore+CScore+AScore+EScore+OScore, data=trainLogStimulating, family = "binomial")
 fullModLogStimulating
 
 ```
 
 ```{r}
-predFullStimulating <- ifelse(predict(fullModLogStimulating, newdata = testLogStimulating) >= 0.5, 1, 0)
-confusionMatrix(table(predFullStimulating, testLogStimulating$stimulating_user))
-```
-
-
-Ponto de corte em 0.8:
-```{r}
-predFullStimulating08 <- ifelse(predict(fullModLogStimulating, newdata = testLogStimulating) >= 0.8, 1, 0)
-confusionMatrix(table(predFullStimulating08, testLogStimulating$stimulating_user))
-
-```
-
-```{r}
-predFullStimulating03 <- ifelse(predict(fullModLogStimulating, newdata = testLogStimulating) >= 0.3, 1, 0)
-confusionMatrix(table(predFullStimulating03, testLogStimulating$stimulating_user))
-
+predFullStimulating <- ifelse(predict(fullModLogStimulating, newdata = trainLogStimulating) >= 0.5, 1, 0)
+confusionMatrix(table(predFullStimulating, trainLogStimulating$stimulating_user), positive = "1")
 ```
 
 
@@ -74,30 +65,70 @@ Resumo
 summary(stepStimulating)
 ```
 
-
+Avaliando resultados no treino com 0.5:
 ```{r}
-predStepStimulating <- ifelse(predict(stepStimulating, newdata = testLogStimulating) >= 0.75, 1, 0)
-confusionMatrix(table(predStepStimulating, testLogStimulating$stimulating_user))
+predStepStimulatingTrain <- ifelse(predict(stepStimulating, newdata = trainLogStimulating) >= 0.5, 1, 0)
+confusionMatrix(table(predStepStimulatingTrain, trainLogStimulating$stimulating_user), positive = "1")
 
 ```
+
+```{r}
+fullModLogStimulatingWeighted <- glm(stimulating_user ~ Age+Gender+Education+NScore+CScore+AScore+EScore+OScore, data=trainLogStimulating, weights = control, family = "binomial")
+fullModLogStimulatingWeighted
+```
+
+Step no weighted:
+```{r}
+stepStimulatingWeighted <- stepAIC(fullModLogStimulatingWeighted, direction = "backward")
+stepStimulatingWeighted$anova
+```
+
+Avaliando com pesos e 0.5 no conjunto de treino:
+```{r}
+predStepStimulatingWeightedTrain <- ifelse(predict(stepStimulatingWeighted, newdata = trainLogStimulating) >= 0.5, 1, 0)
+confusionMatrix(table(predStepStimulatingWeightedTrain, trainLogStimulating$stimulating_user), positive = "1")
+
+```
+
+Plot do step com pesos:
 
 
 ```{r}
 library(ggplot2)
 ## now we can plot the data
 predicted.data <- data.frame(
-  prob.user=stepStimulating$fitted.values,
+  prob.user=stepStimulatingWeighted$fitted.values,
   user=trainLogStimulating$stimulating_user)
  
 predicted.data <- predicted.data[
   order(predicted.data$prob.user, decreasing=FALSE),]
 predicted.data$rank <- 1:nrow(predicted.data)
  
-ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
+probEstimulantes <- ggplot(data=predicted.data, aes(x=rank, y=prob.user)) +
   geom_point(aes(color=user), alpha=1, shape=4, stroke=2) +
-  xlab("Index") +
-  ylab("Predicted probability of being a Stimulating drug user")
+  xlab("Indivíduos ordenados") +
+  ylab("Probabilidade predita de ser usuário de drogas estimulantes") + 
+  labs(color="Usuário") +
+  scale_color_hue(labels = c("Não", "Sim"))
+probEstimulantes
+
+ggsave("LogRegEstimulantes.png", plot = probEstimulantes)
 ```
+
+Avaliando com ponto de corte 0.35:
+
+```{r}
+predStepStimulatingWeightedTrain <- ifelse(predict(stepStimulatingWeighted, newdata = trainLogStimulating) >= 0.35, 1, 0)
+confusionMatrix(table(predStepStimulatingWeightedTrain, trainLogStimulating$stimulating_user), positive = "1")
+
+```
+
+Avaliando resultados no conjunto de teste e corte 0,35:
+```{r}
+predStepStimulatingWeighted <- ifelse(predict(stepStimulatingWeighted, newdata = testLogStimulating) >= 0.35, 1, 0)
+confusionMatrix(table(predStepStimulatingWeighted, testLogStimulating$stimulating_user), positive = "1")
+```
+
 
 Importancia das variaveis: 
 ```{r}
@@ -115,10 +146,19 @@ Ethnicity dar uma olhada na distribuicao para explicar.
 OScoreHigh 1.31 -> a chance de ser usuario eh 1.31x maior de ser usuario do que as demais categorias.  
 
 ```{r}
-stepStimulating
-round(exp(coef(stepStimulating)), 2)
+oddsRatioStimulating <- sort(round(exp(coef(stepStimulatingWeighted)), 2))
+oddsRatioStimulating
+write.csv2(oddsRatioStimulating, "oddsRatioEstimulantes.csv")
 ```
 
+```{r}
+write.csv2(stepStimulatingWeighted$coefficients, "coefsEstimulantes.csv")
+```
+
+Final formula:
+```{r}
+paste(round(stepStimulatingWeighted$coefficients, 4), names(stepStimulatingWeighted$coefficients), sep = "*", collapse = " ")
+```
 
 
 ## Referencias
