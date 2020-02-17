@@ -1,0 +1,19 @@
+"";"x"
+"Age45+";0,18
+"Age35-44";0,36
+"OScoreVeryLow";0,51
+"OScoreLow";0,54
+"(Intercept)";0,55
+"AScoreHigh";0,68
+"Age25-34";0,79
+"EducationUniversity degree";1,06
+"AScoreLow";1,39
+"CScoreHigh";1,4
+"CScoreLow";1,47
+"EducationProfessional certificate/ diploma";1,48
+"EducationLeft school";1,62
+"OScoreHigh";1,73
+"EducationSome college or university, no certificate or degree";1,78
+"GenderMale";1,82
+"AScoreVeryLow";2,55
+"CScoreVeryLow";2,61
