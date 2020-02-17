@@ -78,18 +78,21 @@ barplot(table(data$Gender),
    xlab="Gender", col = brewer.pal(2, "Pastel2"), ylim = c(0,1000))
 dev.off()
 png('dist_educacao.png')
-par(mar=c(4,12,4,4))
-barplot(table(data$Education),
-   xlab="Education", col = brewer.pal(9, "Pastel1"), cex.names=0.5, las = 2, horiz = TRUE)
+par(mar=c(4,20,4,4))
+education <- ordered(data$Education, levels = c("Some college or university, no certificate or degree", "University degree", "Masters degree", "Professional certificate/ diploma", "Left school at 18 years", "Left school at 16 years", "Doctorate degree", "Left school at 17 years", "Left school before 16 years"))
+barplot(table(education),
+   xlab="Education", col = brewer.pal(9, "Pastel1"), cex.names=0.8, las = 2, horiz = TRUE)
 dev.off()
 png('dist_pais.png')
 par(mar=c(4,9,4,4))
-barplot(table(data$Country),
+country <- ordered(data$Country, levels = c("UK", "USA", "Other", "Canada", "Australia", "Republic of Ireland", "New Zealand"))
+barplot(table(country),
    xlab="Country", col = brewer.pal(6, "Set3"), las =2, xlim = c(0,1200), horiz = TRUE)
 dev.off()
 png('dist_etnia.png')
 par(mar=c(4,8,4,4))
-barplot(table(data$Ethnicity),
+ethnicity <- ordered(data$Ethnicity, levels = c("White", "Other", "Black", "Asian", "Mixed-White/Asian", "Mixed-White/Black", "Mixed-Black/Asian"))
+barplot(table(ethnicity),
    xlab="Ethnicity", col = brewer.pal(7, "Dark2"), las = 2, horiz = TRUE, xlim = c(0,2000))
 dev.off()
 ```
@@ -229,15 +232,15 @@ barplot(table(data$alcohol_user),
 dev.off()
 png('dist_user_cannabis.png')
 barplot(table(data$cannabis_user),
-   xlab="Cannabis User", col = c("green", "red"), names = c("Non-User", "User"), ylim= c(0,1000))
+   xlab="Cannabis User", col = c("green", "red"), names = c("Non-User", "User"), ylim= c(0,2000))
 dev.off()
 png('dist_user_ecstasy.png')
 barplot(table(data$ecstasy_user),
-   xlab="Ecstasy User", col = c("green", "red"), names = c("Non-User", "User"), ylim= c(0,1500))
+   xlab="Ecstasy User", col = c("green", "red"), names = c("Non-User", "User"), ylim= c(0,2000))
 dev.off()
 png('dist_user_stimulating.png')
 barplot(table(data$stimulating_user),
-   xlab="Stimulating User", col = c("green", "red"), names = c("Non-User", "User"), ylim= c(0,1500))
+   xlab="Stimulating User", col = c("green", "red"), names = c("Non-User", "User"), ylim= c(0,2000))
 dev.off()
 
 
