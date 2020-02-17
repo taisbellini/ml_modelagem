@@ -1,0 +1,22 @@
+"";"x"
+"(Intercept)";0,969887285781089
+"Age25-34";-0,280511593013118
+"Age35-44";-0,675816235173428
+"Age45+";-0,938844768982569
+"GenderMale";-0,237045031079825
+"EducationLeft school";-0,666555095004876
+"EducationProfessional certificate/ diploma";-0,580481191975934
+"EducationSome college or university, no certificate or degree";-0,370545496335814
+"EducationUniversity degree";-0,27642616794689
+"NScoreHigh";0,23199932304711
+"NScoreLow";0,29119719387116
+"NScoreVeryLow";0,390857612489997
+"CScoreHigh";0,605897018280992
+"CScoreLow";0,363534490740415
+"CScoreVeryLow";0,516036710037604
+"AScoreHigh";-0,426074709271703
+"AScoreLow";0,196109389792321
+"AScoreVeryLow";0,203989624823565
+"EScoreHigh";13,5985077682482
+"EScoreLow";-0,24063284616899
+"EScoreVeryLow";-0,221927810681298
