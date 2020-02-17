@@ -9,6 +9,7 @@ output: html_notebook
 #install.packages("tidyverse")
 library(caret)
 library(tidyverse)
+library(MASS)
 
 ```
 
@@ -50,6 +51,7 @@ Ambos:
 ```{r}
 # Read and clean data
 data <- read.csv2("../tarefa_3/dadosTarefa3.csv")
+data <- transform(data, remission = ifelse(remission == "1", 0, 1))
 data <- na.omit(data)
 data$tumorsize <- as.numeric(data$tumorsize)
 data$co2 <- as.numeric(data$co2)
@@ -64,14 +66,6 @@ data$Married <- as.factor(data$Married)
 head(data)
 ```
 
-Split data:
-```{r}
-set.seed(205650)
-indexes <- createDataPartition(data$DID, p = 0.85, list = FALSE)
-train = data[indexes, ]
-test = data[-indexes, ]
-```
-
 
 # Avaliação da identificação do médico (DID)
 
@@ -80,7 +74,62 @@ Foi escolhido avaliar as variáveis categoricas, pois faz mais sentido avaliar v
 
 # Avaliação da identificação se o paciente está em remissão
 
-Usando regressão logística (tarefa 3) para classificar remissão considerando vars categóricas:
+
+Para a Tarefa 3, foi utilizada regressão logística, pois esta é uma variável dicotômica e este algoritmo funciona bem neste tipo de classificação. 
+
+Usando regressão logística (tarefa 3) para classificar remissão:
+
+```{r}
+set.seed(205650)
+indexes <- createDataPartition(data$remission, p = 0.85, list = FALSE)
+train = data[indexes, ]
+test = data[-indexes, ]
+
+
+
+fullMod <- glm(remission ~ DID+pain+Sex+SmokingHx+FamilyHx + Married + nmorphine + ntumors + mobility + tumorsize + co2 + Age + WBC + RBC + IL6, data = train, family = "binomial")
+summary(fullMod)
+stepMod <- stepAIC(fullMod, direction = "backward")
+stepMod$anova
+
+```
+
+Final Model:
+remission ~ DID + pain + SmokingHx + mobility + tumorsize + IL6
+Significativas: DID, smoking, mobility, tumorsize
+
+```{r}
+significativeMod <- glm(remission ~ DID+pain+SmokingHx+mobility +IL6, data = train, family = "binomial")
+```
+
+Comparando os dois (step e significative):
+Step:
+```{r}
+predstep <- ifelse(predict(stepMod, newdata = train) >= 0.5, 1, 0)
+confusionMatrix(table(predstep, train$remission), positive = "1")
+```
+
+significative:
+```{r}
+predsig <- ifelse(predict(significativeMod, newdata = train) >= 0.5, 1, 0)
+confusionMatrix(table(predsig, train$remission), positive = "1")
+```
+
+Step ficou melhor. Sim, pode-se identificar com quase 90% de acurácia. 
+
+
+Para a Tarefa 4, utilizaremos SVM, que também é um bom algoritmo para classificação de variáveis dicotômicas. 
+
+Apenas variáveis numéricas. Primeiro vamos avaliar elas:
+
+SVM para as variáveis numéricas:
+```{r}
+
+```
+
+decision tree para todas as variaveis: 
+
+
 ```{r}
 dataRem <- data
 trainRem <- train
@@ -129,49 +178,7 @@ confusionMatrix(table(pred, train$remission))
 ```
 
 
-DID
-```{r}
-#install.packages("rpart")
-library(rpart)
-model_fit <- rpart(SmokingHx~., data = data, method = "class", control = list(minsplit = 20))
-predicted_train <- predict(model_fit, newdata = train, "class")
-predicted_test <- predict(model_fit, newdata = test, "class")
 
-```
-
-
-
-Importância de cada Variável:
-```{r}
-summary(model_fit)
-```
-
-Variáveis que foram efetivamente utilizadas pra gerar a árvore:
-```{r}
-printcp(model_fit)
-```
-
-Gerando as Matrizes de Confusão:
-
-```{r}
-ctable_train <- confusionMatrix(predicted_train, as.factor(train$SmokingHx))
-ctable_test <- confusionMatrix(predicted_test, as.factor(test$SmokingHx))
-ctable_train$table
-ctable_test$table
-
-```
-
-Analisando a Acurácia dos Ajustes:
-
-```{r}
-print("train")
-ctable_train$overall['Accuracy']
-print("test")
-ctable_test$overall['Accuracy']
-
-```
-
-DID fica ruim.
 Remission com arvore de decisao da.
 Smoking tb
 
