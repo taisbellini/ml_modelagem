@@ -1,6 +1,6 @@
 ---
 title: "Tarefa 4 - Classificação"
-output: pdf_document
+output: word_document
 ---
 
 
@@ -8,6 +8,7 @@ output: pdf_document
 #install.packages("caret")
 #install.packages("tidyverse")
 #install.packages('rattle')
+#install.packages("neuralnet")
 library(caret)
 library(tidyverse)
 library(MASS)
@@ -15,6 +16,8 @@ library (e1071)
 library(rpart)
 library(rattle)
 library(RColorBrewer)
+library(knitr)
+library(neuralnet)
 
 ```
 
@@ -65,7 +68,7 @@ data$Married <- as.factor(data$Married)
 
 Vamos avaliar alguns métodos de classificação para identificar o médico que atendeu o paciente, se o paciente está em remissão ou não e se o paciente tem ou teve o hábito de fumar. Além disso, vamos buscar determinar se o paciente está em remissão ou não a partir das variáveis sexo, histórico familiar, estado civil (casado ou não) e médico que atendeu.
 
-Para todas as análises, a amostra foi dividido nos conjuntos de treino (85%) e teste (15%) através da função **createDatapartition** do pacote **caret** e com semente **205650**.
+Para todas as análises, a amostra foi dividida nos conjuntos de treino e teste através da função **createDatapartition** do pacote **caret** e com semente **205650**.
 
 
 ```{r}
@@ -75,17 +78,117 @@ dataCont <- data[,c("tumorsize", "co2", "lungcapacity", "Age", "WBC", "RBC", "IL
 
 # Avaliação da identificação do médico (DID)
 
-Foi escolhido avaliar as variáveis categoricas, pois faz mais sentido avaliar variaveis como remission e sex.
-DID - tarefa 3 - reg log e kmeans, tarefa 4 arvore - se não funcionar: redes neurais
+Para avaliar se é possível identificar o médico que atendeu o paciente, considerando os algoritmos vistos até a Terefa 3, vamos utilizar a regressão logística ordinal. Para tal, será usado o pacote **MASS** e a função **polr**. Separamos o dataset em treino (85%) e teste (15%).
+
+```{r}
+set.seed(205650)
+indexes <- createDataPartition(data$DID, p = 0.90, list = FALSE)
+train = data[indexes, ]
+test = data[-indexes, ]
+```
+
+
+```{r}
+head(data)
+str(data)
+ord_reg <- polr(DID~., data = train, Hess = TRUE)
+summary(ord_reg)
+
+summary_table <- coef(summary(ord_reg))
+pval <- pnorm(abs(summary_table[, "t value"]),lower.tail = FALSE)* 2
+summary_table <- cbind(summary_table, "p value" = round(pval,3))
+summary_table
+```
+
+Resultados: 
+
+```{r}
+predtrain <- predict(ord_reg, newdata = train)
+predtest <- predict(ord_reg, newdata = test)
+predtrain
+cm <- confusionMatrix(table(predtrain, train$DID))
+cmtest <- confusionMatrix(table(predtest, test$DID))
+cm$table
+cm$byClass
+cmtest$table
+cmtest$byClass
+cm$overall
+cmtest$overall
+```
+
+
+A acurácia e sensibilidade obtiveram valores muito baixos, sendo a maioria menos de 50%, como observado na Tabela 1. Com este método e as variáveis disponíveis, não é adequado classificar qual médico atendeu o paciente.
+
+para a tarefa 4, foi usada a abordagem de rede neural, através da função **neuralnet** do pacote de mesmo nome. Os parâmetros o número de neurônios escondidos (vértices) foi 2.
+
+```{r}
+# fit neural network
+nn=neuralnet(DID~tumorsize + co2 + lungcapacity + Age + WBC + RBC + IL6,data=train, hidden=2, act.fct = "logistic",
+                linear.output = FALSE)
+nnplot <- plot(nn)
+```
+
+Treino:
+```{r}
+Predict=compute(nn,train)
+prob <- Predict$net.result
+pred <-  max.col(prob, 'first')
+pred <- ifelse(pred == 1, "A", ifelse(pred==2, "B", ifelse(pred == 3, "C", "D")))
+pred <- factor(pred, levels = c("A", "B", "C", "D"))
+confusionMatrix(table(pred, train$DID))
+```
+
+Teste:
+```{r}
+Predict=compute(nn,test)
+prob <- Predict$net.result
+pred <-  max.col(prob, 'first')
+pred <- ifelse(pred == 1, "A", ifelse(pred==2, "B", ifelse(pred == 3, "C", "D")))
+pred <- factor(pred, levels = c("A", "B", "C", "D"))
+confusionMatrix(table(pred, test$DID))
+```
+
+Os resultados com redes neurais também não foram satisfatórios.
+
+Vamos fazer uma tentativa com árvore de decisão:
+
+```{r}
+set.seed(205650)
+indexes <- createDataPartition(data$DID, p = 0.85, list = FALSE)
+train = data[indexes, ]
+test = data[-indexes, ]
+
+model_fit <- rpart(DID ~ ., data = train, method = "class", control = list(minsplit = 20))
+predicted_train <- predict(model_fit, newdata = train, "class")
+predicted_test <- predict(model_fit, newdata = test, "class")
+summary(model_fit)
+# importancia das vars
+model_fit$variable.importance
+#vars que foram usadas na arvore
+printcp(model_fit)
+
+#Matriz de confusao
+ctable_train <- confusionMatrix(predicted_train, train$DID)
+ctable_test <- confusionMatrix(predicted_test, test$DID)
+ctable_train$table
+ctable_test$table
+ctable_train
+ctable_test
+
+fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds", "Greens", "Purples"), tweak = 1)
+dev.off()
+```
+
+Mesmo com árvore de decisão, não foi possível obter resultados satisfatórios. 
 
 
 # Avaliação da identificação se o paciente está em remissão
 
-Para a identificação se o paciente está em remissão, considerando os métodos vistos até a Tarefa 3 do curso, a regressão logística se mostrou adequada, pois **remission**é uma variável dicotômica e este algoritmo funciona bem para este tipo de classificação. Além disso, é possível utilizar tanto as variáveis categóricas quanto numéricas.
+Para a identificação se o paciente está em remissão, considerando os métodos vistos até a Tarefa 3 do curso, a regressão logística se mostrou adequada, pois **remission** é uma variável dicotômica e este algoritmo funciona bem para este tipo de classificação. Além disso, é possível utilizar tanto as variáveis categóricas quanto numéricas.
 
 ## Resultados Regressão Logística binomial
 
-A função **glm** do pacote **MASS** foi utilizada para estimar o modelo de regressão logística binomial. Após a execução do modelo com todas as variáveis (*lungcapacity* foi retirado pois o modelo não convergiu com todas as variáveis), foi aplicada a função **stepAIC**, que faz a seleção de variáveis através do *stepwise* (foi escolhido o método *backard*) tendo como critério o AIC. 
+A função **glm** do pacote **MASS** foi utilizada para estimar o modelo de regressão logística binomial. Após a execução do modelo quase completo (*lungcapacity* foi retirado pois o modelo não convergiu com todas as variáveis), foi aplicada a função **stepAIC**, que faz a seleção de variáveis através do *stepwise* (foi escolhido o método *backard*) tendo como critério o AIC. 
 
 ```{r}
 set.seed(205650)
@@ -110,6 +213,8 @@ Teste: 83,33% de acuracia, 100% sensibilidade, 66,67% de especificidade.
 predStepTrain <- ifelse(predict(stepMod, newdata = train) >= 0.5, 1, 0)
 cm <- confusionMatrix(table(predStepTrain, train$remission), positive = "1")
 cm$byClass
+
+kable(cm$byClass)
 ```
 
 ```{r}
@@ -118,7 +223,7 @@ cm <- confusionMatrix(table(predStepTest, test$remission), positive = "1")
 cm
 ```
 
-Sim, pode-se identificar com aproximadamente 80% de acurácia. Apesar se uma acurácia relativamente boa, não considera-se um bom modelo, pois, neste caso, a especificidade tem grande importância (queremos identificar corretamente quem não está em remissão para definir um novo tratamento).
+Portanto, conclui-se que sim, pode-se identificar se o paciente está em remissão com aproximadamente 80% de acurácia. Apesar de uma acurácia relativamente boa, não considera-se um bom modelo, pois, neste caso, a especificidade tem grande importância (queremos identificar corretamente quem não está em remissão para definir um novo tratamento) e obteve um resultado pouco satisfatório.
 
 
 Considerando os métodos apresentados para a Tarefa 4, utilizaremos SVM, que também é um bom algoritmo para classificação de variáveis dicotômicas. 
@@ -126,7 +231,7 @@ Contudo, ele é adequado para variáveis numéricas, portanto, utilizaremos apen
 
 SVM para as variáveis numéricas:
 ```{r}
-dataSVM <- dataCont
+dataSVM <- na.omit(dataCont)
 dataSVM <- cbind(remission = data[,"remission"], dataSVM)
 head(dataSVM)
 summary(dataSVM)
@@ -145,13 +250,15 @@ svmfit$coefs
 dataSVM[svmfit$index,]
 
 # betas:
-beta0 = svmfit$rho
-betas = c(svmfit$coefs)%*%as.matrix(dataSVM[svmfit$index,])
-coefs <- cbind(intercept = beta0, betas)
+#beta0 = svmfit$rho
+#svmfit$coefs
+#c(svmfit$coefs)
+#betas = c(svmfit$coefs)%*%as.matrix(train[svmfit$index,])
+#coefs <- cbind(intercept = beta0, betas)
 
 
-formula <- paste(round(coefs, 1), colnames(coefs), sep = "*", collapse = " ")
-formula
+#formula <- paste(round(coefs, 1), colnames(coefs), sep = "*", collapse = " ")
+#formula
 
 # matrix de confus?o:
 confusionMatrix(table(predict(svmfit), train$remission), positive="1")
@@ -159,7 +266,7 @@ confusionMatrix(table(predict(svmfit), train$remission), positive="1")
 
 SVM ficou com 89,87% de acuracia, 92,50% de sensibilidade e 87,18% de especificidade.
 
-Para visualizar, vamos escolher as duas variáveis consideradas mais importantes pelo modelo, 
+Para visualizar, vamos escolher as duas variáveis consideradas mais importantes pelo modelo: 
 
 ```{r}
 w <- t(svmfit$coefs) %*% svmfit$SV                 # weight vectors
@@ -167,8 +274,6 @@ w
 w <- apply(w, 2, function(v){sqrt(sum(v^2))})    # weight
 w <- sort(w, decreasing = T)
 w
-
-svm.imp <- Importance(svmfit, data=train)
 
 ```
 
@@ -212,7 +317,7 @@ dev.off()
 
 ```
 
-Observamos uma acurácia de X no treino e Y no teste. A sensibilidade e a especificidade ficaram em X e Y, respectivamente. Consideramos 
+Observamos uma acurácia de 91% no treino e 100% no teste. São resultados muito satisfatórios, porém é importante ressaltar que o banco possui 91 observações, ou seja, apenas 12 observações foram utilizadas para o teste.
 
 # Avaliação da identificação se o paciente é fumante
 
@@ -224,8 +329,18 @@ ggplot(data, aes(x = SmokingHx, y = lungcapacity, fill = SmokingHx)) +   geom_bo
 
 ```{r}
 head(data)
+ggplot(data, aes(x = SmokingHx, y = tumorsize, fill = SmokingHx)) +   geom_boxplot(size = .75) +   facet_grid(Sex ~ DID, margins = FALSE) +   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+```{r}
+head(data)
 str(data)
-ord_reg <- polr(SmokingHx~tumorsize+pain+mobility+ntumors+Married+Sex+DID+IL6+co2+lungcapacity+nmorphine, data = data, Hess = TRUE)
+set.seed(205650)
+indexes <- createDataPartition(data$SmokingHx, p = 0.85, list = FALSE)
+train = data[indexes, ]
+test = data[-indexes, ]
+
+ord_reg <- polr(SmokingHx~tumorsize+pain+mobility+ntumors+Married+Sex+DID+IL6+co2+lungcapacity+nmorphine, data = train, Hess = TRUE)
 summary(ord_reg)
 
 summary_table <- coef(summary(ord_reg))
@@ -237,7 +352,7 @@ summary_table
 vars com p-value < 0.05: tumorsize, lungcapacity
 
 ```{r}
-ord_reg_sg <- polr(SmokingHx~tumorsize+lungcapacity, data = data, Hess = TRUE)
+ord_reg_sg <- polr(SmokingHx~tumorsize+lungcapacity, data = train, Hess = TRUE)
 summary(ord_reg_sg)
 summary_table <- coef(summary(ord_reg_sg))
 pval <- pnorm(abs(summary_table[, "t value"]),lower.tail = FALSE)* 2
@@ -246,40 +361,28 @@ summary_table
 ```
 Comparando:
 ```{r}
-predsig<- predict(ord_reg_sg, newdata = data)
-pred <- predict(ord_reg, newdata = data)
-confusionMatrix(table(predsig, data$SmokingHx))
-```
-
-
-```{r}
-install.packages("neuralnet")
-# load library
-library(neuralnet)
-
-# fit neural network
-nn=neuralnet(SmokingHx~tumorsize,data=data, hidden=2, act.fct = "logistic",
-                linear.output = FALSE)
-plot(nn)
+predsig<- predict(ord_reg_sg, newdata = train)
+pred <- predict(ord_reg, newdata = train)
+confusionMatrix(table(predsig, train$SmokingHx))
+confusionMatrix(table(pred, train$SmokingHx))
 ```
 
 ```{r}
-Predict=compute(nn,data)
-Predict$net.result
-prob <- Predict$net.result
-pred <- colname(probifelse(prob>0.5, 1, 0)
+predtest <- predict(ord_reg, newdata = test)
+confusionMatrix(table(predtest, test$SmokingHx))
 ```
 
 
-regressao logistica ordinal done 
-k-means (3 grupos) - vars numericas
-nn - vars numericas (tentar com todas)
-arvore
+Árvore:
 
 ```{r}
-model_fit <- rpart(SmokingHx ~ ., data = data, method = "class", control = list(minsplit = 20))
-predicted_train <- predict(model_fit, newdata = data, "class")
-predicted_test <- predict(model_fit, newdata = data, "class")
+set.seed(205650)
+indexes <- createDataPartition(data$SmokingHx, p = 0.85, list = FALSE)
+train = data[indexes, ]
+test = data[-indexes, ]
+model_fit <- rpart(SmokingHx ~ ., data = train, method = "class", control = list(minsplit = 20))
+predicted_train <- predict(model_fit, newdata = train, "class")
+predicted_test <- predict(model_fit, newdata = test, "class")
 summary(model_fit)
 # importancia das vars
 model_fit$variable.importance
@@ -287,17 +390,13 @@ model_fit$variable.importance
 printcp(model_fit)
 
 #Matriz de confusao
-ctable_train <- confusionMatrix(predicted_train, as.factor(data$SmokingHx))
-ctable_test <- confusionMatrix(predicted_test, as.factor(data$SmokingHx))
+ctable_train <- confusionMatrix(predicted_train, as.factor(train$SmokingHx))
+ctable_test <- confusionMatrix(predicted_test, as.factor(test$SmokingHx))
 ctable_train$table
 ctable_test$table
 ctable_train
 ctable_test
 
-install.packages('rattle')
-library(rattle)
-library(RColorBrewer)
-png('arvore_cannabis.png')
 fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds", "Greens"), tweak = 1)
 dev.off()
 
@@ -310,7 +409,7 @@ Utilize um modelo apropriado para analisar a relação entre o desfecho remissã
 histórico familiar, estado civil e DID.
 
 tarefa 3 - Reg logistica
-tarefa 4 - tree (tentar nn)
+tarefa 4 - tree
 
 ```{r}
 model_fit <- rpart(remission~Sex+FamilyHx+Married+DID, data = data, method = "class", control = list(minsplit = 20))
