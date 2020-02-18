@@ -1,57 +1,55 @@
 ---
 title: "Tarefa 4 - Classificação"
-output: html_notebook
+output: pdf_document
 ---
 
 
 ```{r, include=FALSE}
 #install.packages("caret")
 #install.packages("tidyverse")
+#install.packages('rattle')
 library(caret)
 library(tidyverse)
 library(MASS)
+library (e1071)
+library(rpart)
+library(rattle)
+library(RColorBrewer)
 
 ```
 
 
 # Introdução 
 
-Descrição dados e problema.
-Apenas categoricas:
-DID - tarefa 3 - reg log e kmeans, tarefa 4 arvore - se não funcionar: redes neurais
-remission - tarefa 3 - reg logistica, tarefa 4 - svm
-smoking - tarefa 3 , tarefa 4 - 
+Para este estudo, temos um banco de dados que possui variáveis categóricas e numéricas com informações sobre pacientes com câncer. Algumas variáveis categóricas não estavam definidas como fatores, assim como algumas das numéricas estavam classificadas em categorias. Portanto, se fez um ajuste inicial de forma que variáveis categóricas fossem reconhecidas como fatores e as numéricas como números, utilizando as funções **as.factor()** e **as.numeric()**.
 
- tumorsize - Tumor size: Continuous.
- co2 - 𝐶𝑂ଶ levels (percents): Continuous.
- pain - Pain scale: Integer (from 1 to 10).
- Mobility - Mobility scale: Integer (from 1 to 10).
- ntumors - Number of tumors: Integer (from 1 to 9).
- nmorphine - Number of self-administered morphine doses: integer.
- remission - Cancer in remission: binary (yes/no). Cancer remission is when the signs and symptoms
-of cancer have lessened or are undetectable.
- lungcapacity - Proportion of optimal lung capacity: continuous (from 0 to 1).
- Age: continuous in years but recorded at a higher degree of accuracy
- Married: binary, married/living with partner or single.
- FamilyHx: binary (yes/no), does the patient have a family history (Hx) of cancer?
- SmokingHx: categorical with three levels, current smoker, former smoker, never smoked
- Sex: binary (female/male)
- WBC: continuous, white blood count. Roughly 3,000 is low, 10,000 is middle, and 30,000 per microliter
-is high.
- RBC: continuous, red blood count.
- IL6: continuous, interleukin 6, a proinflammatory cytokine commonly examined as an indicator of
-inflammation, cannot be lower than zero
- DID: Doctor’s ID. Categorical
+As variáveis categóricas são:
+* Paciente em remissão (**remission**): Níveis são 1 e 2, consideramos 1 = "Sim" e 2 = "Não" e recodificamos para 1 e 0, respectivamente;
+* Paciente é casado (**Married**): Níveis são 0 e 1, consideramos 0 = "Não" e 1 = "Sim";
+* Paciente possui histórico familiar de câncer (**FamilyHx**): Níveis são 0 e 1, consideramos 0= "Não" e 1 = "Sim";
+* Paciente é fumante (**SmokingHx**): Níveis são "never", "former", "current";
+* Sexo (**Sex**): Níveis são 1 e 2, consideramos 1 = "Homem", 2 = "Mulher";
+* Médico que atendeu o paciente(**DID**): Níveis são "A", "B", "C", "D".
 
-Apenas numericas:
+As variáveis numéricas são: 
+* Tamanho do tumor (**tumorsize**): Contínua;
+* Percentual de níveis de co2 (**co2**): Contínua;
+* Escala de dor (**pain**): Inteiro de 0 a 10; 
+* Escala de mobilidade (**mobility**): Inteiro de 0 a 10;
+* Número de tumores (**ntumors**): Inteiro de 0 a 9;
+* Número de doses de morfina (**nmorphine**): Inteiro;
+* Proporção de capacidade ótima do pulmão (**lungcapacity**): Contínua de 0 a 1;
+* Idade (**Age**): Contínua em;
+* Contagem de glóbulos brancos no sangue (**WBC**): Contínua; 
+* Contagem de glóbulos vermelhos no sangue (**RBC**): Contínua; 
+* Indicador de inflamação (**IL6**): Contínua.
 
-Ambos:
+Ainda, o banco possui informações faltantes que foram retirados através do recurso **na.omit()**.  
 
-
-```{r}
+```{r, include = FALSE}
 # Read and clean data
 data <- read.csv2("../tarefa_3/dadosTarefa3.csv")
-data <- transform(data, remission = ifelse(remission == "1", 0, 1))
+data <- transform(data, remission = ifelse(remission == "1", 1, 0))
 data <- na.omit(data)
 data$tumorsize <- as.numeric(data$tumorsize)
 data$co2 <- as.numeric(data$co2)
@@ -63,21 +61,31 @@ data$Sex <- as.factor(data$Sex)
 data$FamilyHx <- as.factor(data$FamilyHx)
 data$remission <- as.factor(data$remission)
 data$Married <- as.factor(data$Married)
-head(data)
+```
+
+Vamos avaliar alguns métodos de classificação para identificar o médico que atendeu o paciente, se o paciente está em remissão ou não e se o paciente tem ou teve o hábito de fumar. Além disso, vamos buscar determinar se o paciente está em remissão ou não a partir das variáveis sexo, histórico familiar, estado civil (casado ou não) e médico que atendeu.
+
+Para todas as análises, a amostra foi dividido nos conjuntos de treino (85%) e teste (15%) através da função **createDatapartition** do pacote **caret** e com semente **205650**.
+
+
+```{r}
+dataCont <- data[,c("tumorsize", "co2", "lungcapacity", "Age", "WBC", "RBC", "IL6")]
 ```
 
 
 # Avaliação da identificação do médico (DID)
 
 Foi escolhido avaliar as variáveis categoricas, pois faz mais sentido avaliar variaveis como remission e sex.
+DID - tarefa 3 - reg log e kmeans, tarefa 4 arvore - se não funcionar: redes neurais
 
 
 # Avaliação da identificação se o paciente está em remissão
 
+Para a identificação se o paciente está em remissão, considerando os métodos vistos até a Tarefa 3 do curso, a regressão logística se mostrou adequada, pois **remission**é uma variável dicotômica e este algoritmo funciona bem para este tipo de classificação. Além disso, é possível utilizar tanto as variáveis categóricas quanto numéricas.
 
-Para a Tarefa 3, foi utilizada regressão logística, pois esta é uma variável dicotômica e este algoritmo funciona bem neste tipo de classificação. 
+## Resultados Regressão Logística binomial
 
-Usando regressão logística (tarefa 3) para classificar remissão:
+A função **glm** do pacote **MASS** foi utilizada para estimar o modelo de regressão logística binomial. Após a execução do modelo com todas as variáveis (*lungcapacity* foi retirado pois o modelo não convergiu com todas as variáveis), foi aplicada a função **stepAIC**, que faz a seleção de variáveis através do *stepwise* (foi escolhido o método *backard*) tendo como critério o AIC. 
 
 ```{r}
 set.seed(205650)
@@ -85,112 +93,263 @@ indexes <- createDataPartition(data$remission, p = 0.85, list = FALSE)
 train = data[indexes, ]
 test = data[-indexes, ]
 
-
-
-fullMod <- glm(remission ~ DID+pain+Sex+SmokingHx+FamilyHx + Married + nmorphine + ntumors + mobility + tumorsize + co2 + Age + WBC + RBC + IL6, data = train, family = "binomial")
+fullMod <- glm(remission ~ DID + pain + Sex + SmokingHx + FamilyHx + Married + nmorphine + ntumors + mobility + tumorsize + co2 + Age + WBC + RBC + IL6, data = train, family = "binomial")
 summary(fullMod)
 stepMod <- stepAIC(fullMod, direction = "backward")
 stepMod$anova
-
 ```
 
-Final Model:
-remission ~ DID + pain + SmokingHx + mobility + tumorsize + IL6
-Significativas: DID, smoking, mobility, tumorsize
+O modelo final, após o *stepwise backard*, contém as seguintes variáveis:  **SmokingHx, FamilyHx, mobility, tumorsize e IL6**. As variáveis consideradas significativas (p-valor < 0.05) foram: **SmokingHx, mobility, tumorsize, DID, Sex, Married**.
+
+
+Os resultados obtidos foram:
+
+Treino: 82,37% de acuracia, 75,71% de sensibilidade e 89,74% de especificidade.
+Teste: 83,33% de acuracia, 100% sensibilidade, 66,67% de especificidade.
+```{r}
+predStepTrain <- ifelse(predict(stepMod, newdata = train) >= 0.5, 1, 0)
+cm <- confusionMatrix(table(predStepTrain, train$remission), positive = "1")
+cm$byClass
+```
 
 ```{r}
-significativeMod <- glm(remission ~ DID+pain+SmokingHx+mobility +IL6, data = train, family = "binomial")
+predStepTest <- ifelse(predict(stepMod, newdata = test) >= 0.5, 1, 0)
+cm <- confusionMatrix(table(predStepTest, test$remission), positive = "1")
+cm
 ```
 
-Comparando os dois (step e significative):
-Step:
-```{r}
-predstep <- ifelse(predict(stepMod, newdata = train) >= 0.5, 1, 0)
-confusionMatrix(table(predstep, train$remission), positive = "1")
-```
-
-significative:
-```{r}
-predsig <- ifelse(predict(significativeMod, newdata = train) >= 0.5, 1, 0)
-confusionMatrix(table(predsig, train$remission), positive = "1")
-```
-
-Step ficou melhor. Sim, pode-se identificar com quase 90% de acurácia. 
+Sim, pode-se identificar com aproximadamente 80% de acurácia. Apesar se uma acurácia relativamente boa, não considera-se um bom modelo, pois, neste caso, a especificidade tem grande importância (queremos identificar corretamente quem não está em remissão para definir um novo tratamento).
 
 
-Para a Tarefa 4, utilizaremos SVM, que também é um bom algoritmo para classificação de variáveis dicotômicas. 
-
-Apenas variáveis numéricas. Primeiro vamos avaliar elas:
+Considerando os métodos apresentados para a Tarefa 4, utilizaremos SVM, que também é um bom algoritmo para classificação de variáveis dicotômicas. 
+Contudo, ele é adequado para variáveis numéricas, portanto, utilizaremos apenas estas variáveis na análise. 
 
 SVM para as variáveis numéricas:
 ```{r}
+dataSVM <- dataCont
+dataSVM <- cbind(remission = data[,"remission"], dataSVM)
+head(dataSVM)
+summary(dataSVM)
+
+set.seed(205650)
+indexes <- createDataPartition(dataSVM$remission, p = 0.85, list = FALSE)
+train = dataSVM[indexes, ]
+test = dataSVM[-indexes, ]
+
+svmfit = svm(remission ~ ., data = train, kernel ="linear", cost = 10, scale = FALSE )
+summary(svmfit)
+
+# indice dos support vectors:
+svmfit$index
+svmfit$coefs
+dataSVM[svmfit$index,]
+
+# betas:
+beta0 = svmfit$rho
+betas = c(svmfit$coefs)%*%as.matrix(dataSVM[svmfit$index,])
+coefs <- cbind(intercept = beta0, betas)
+
+
+formula <- paste(round(coefs, 1), colnames(coefs), sep = "*", collapse = " ")
+formula
+
+# matrix de confus?o:
+confusionMatrix(table(predict(svmfit), train$remission), positive="1")
+```
+
+SVM ficou com 89,87% de acuracia, 92,50% de sensibilidade e 87,18% de especificidade.
+
+Para visualizar, vamos escolher as duas variáveis consideradas mais importantes pelo modelo, 
+
+```{r}
+w <- t(svmfit$coefs) %*% svmfit$SV                 # weight vectors
+w
+w <- apply(w, 2, function(v){sqrt(sum(v^2))})    # weight
+w <- sort(w, decreasing = T)
+w
+
+svm.imp <- Importance(svmfit, data=train)
 
 ```
 
-decision tree para todas as variaveis: 
+```{r}
+svmfit2 = svm(remission ~ lungcapacity + Age, data = train, kernel ="linear", cost = 10, scale = FALSE )
+head(train)
+summary(svmfit2)
+dat = data.frame(lungcapacity = train$lungcapacity, Age = train$Age,  remission = as.factor( train$remission ))
+dat
+# limites de decis?o:
+plot(svmfit2, dat, grid = 100, svSymbol = "X", dataSymbol = 19)
+```
+
+O SVM apresentou resultados satisfatórios, porém, foram utilizadas apenas a variáveis contínuas. Dessa forma, vamos avaliar o desfecho remissão com Árvore de Decisão:
+
+```{r}
+set.seed(205650)
+indexes <- createDataPartition(data$remission, p = 0.85, list = FALSE)
+train = data[indexes, ]
+test = data[-indexes, ]
+
+model_fit <- rpart(remission ~ ., data = train, method = "class", control = list(minsplit = 20))
+predicted_train <- predict(model_fit, newdata = train, "class")
+predicted_test <- predict(model_fit, newdata = test, "class")
+summary(model_fit)
+# importancia das vars
+model_fit$variable.importance
+#vars que foram usadas na arvore
+printcp(model_fit)
+
+#Matriz de confusao
+ctable_train <- confusionMatrix(predicted_train, as.factor(train$remission), positive = "1")
+ctable_test <- confusionMatrix(predicted_test, as.factor(test$remission), positive = "1")
+ctable_train$table
+ctable_test$table
+ctable_train
+ctable_test
+
+fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds"), tweak = 1)
+dev.off()
+
+```
+
+Observamos uma acurácia de X no treino e Y no teste. A sensibilidade e a especificidade ficaram em X e Y, respectivamente. Consideramos 
+
+# Avaliação da identificação se o paciente é fumante
+
+Regressao logistica ordinal
+```{r}
+head(data)
+ggplot(data, aes(x = SmokingHx, y = lungcapacity, fill = SmokingHx)) +   geom_boxplot(size = .75) +   facet_grid(Sex ~ DID, margins = FALSE) +   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+```{r}
+head(data)
+str(data)
+ord_reg <- polr(SmokingHx~tumorsize+pain+mobility+ntumors+Married+Sex+DID+IL6+co2+lungcapacity+nmorphine, data = data, Hess = TRUE)
+summary(ord_reg)
+
+summary_table <- coef(summary(ord_reg))
+pval <- pnorm(abs(summary_table[, "t value"]),lower.tail = FALSE)* 2
+summary_table <- cbind(summary_table, "p value" = round(pval,3))
+summary_table
+```
+
+vars com p-value < 0.05: tumorsize, lungcapacity
+
+```{r}
+ord_reg_sg <- polr(SmokingHx~tumorsize+lungcapacity, data = data, Hess = TRUE)
+summary(ord_reg_sg)
+summary_table <- coef(summary(ord_reg_sg))
+pval <- pnorm(abs(summary_table[, "t value"]),lower.tail = FALSE)* 2
+summary_table <- cbind(summary_table, "p value" = round(pval,3))
+summary_table
+```
+Comparando:
+```{r}
+predsig<- predict(ord_reg_sg, newdata = data)
+pred <- predict(ord_reg, newdata = data)
+confusionMatrix(table(predsig, data$SmokingHx))
+```
 
 
 ```{r}
-dataRem <- data
-trainRem <- train
-testRem <- test
+install.packages("neuralnet")
+# load library
+library(neuralnet)
 
-catData <- data
-catData %>%
-    mutate(tumorsize = ntile(tumorsize, 4))
-
-catData %>%
-    mutate(co2 = ntile(co2, 4))
-catData %>%
-    mutate(lungcapacity = ntile(lungcapacity, 4))
-catData %>%
-    mutate(Age = ntile(Age, 4))
-catData %>%
-    mutate(WBC = ntile(WBC, 4))
-catData %>%
-    mutate(RBC = ntile(RBC, 4))
-catData %>%
-    mutate(IL6 = ntile(IL6, 4))
-catData %>%
-    mutate(pain = ntile(pain, 4))
-catData %>%
-    mutate(mobility = ntile(mobility, 4))
-catData %>%
-    mutate(ntumors = ntile(ntumors, 4))
-catData %>%
-    mutate(nmorphine = ntile(nmorphine, 4))
-
-head(catData)
-
+# fit neural network
+nn=neuralnet(SmokingHx~tumorsize,data=data, hidden=2, act.fct = "logistic",
+                linear.output = FALSE)
+plot(nn)
 ```
 
-
-
-glm:
 ```{r}
-model <- glm(remission ~ , data = trainRem, family = "binomial")
-model <- stepAIC(model, direction = "backward")
-model$anova
-pred <- ifelse(predict(model, newdata = train) >= 0.5, 2, 1)
-pred
-table(pred, train$remission)
-confusionMatrix(table(pred, train$remission))
+Predict=compute(nn,data)
+Predict$net.result
+prob <- Predict$net.result
+pred <- colname(probifelse(prob>0.5, 1, 0)
+```
+
+
+regressao logistica ordinal done 
+k-means (3 grupos) - vars numericas
+nn - vars numericas (tentar com todas)
+arvore
+
+```{r}
+model_fit <- rpart(SmokingHx ~ ., data = data, method = "class", control = list(minsplit = 20))
+predicted_train <- predict(model_fit, newdata = data, "class")
+predicted_test <- predict(model_fit, newdata = data, "class")
+summary(model_fit)
+# importancia das vars
+model_fit$variable.importance
+#vars que foram usadas na arvore
+printcp(model_fit)
+
+#Matriz de confusao
+ctable_train <- confusionMatrix(predicted_train, as.factor(data$SmokingHx))
+ctable_test <- confusionMatrix(predicted_test, as.factor(data$SmokingHx))
+ctable_train$table
+ctable_test$table
+ctable_train
+ctable_test
+
+install.packages('rattle')
+library(rattle)
+library(RColorBrewer)
+png('arvore_cannabis.png')
+fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds", "Greens"), tweak = 1)
+dev.off()
+
 ```
 
 
 
-Remission com arvore de decisao da.
-Smoking tb
+## Remissao + vars definidas
+Utilize um modelo apropriado para analisar a relação entre o desfecho remissão e as variáveis sexo,
+histórico familiar, estado civil e DID.
+
+tarefa 3 - Reg logistica
+tarefa 4 - tree (tentar nn)
+
+```{r}
+model_fit <- rpart(remission~Sex+FamilyHx+Married+DID, data = data, method = "class", control = list(minsplit = 20))
+predicted_train <- predict(model_fit, newdata = data, "class")
+predicted_test <- predict(model_fit, newdata = data, "class")
+summary(model_fit)
+# importancia das vars
+model_fit$variable.importance
+#vars que foram usadas na arvore
+printcp(model_fit)
+
+#Matriz de confusao
+ctable_train <- confusionMatrix(predicted_train, as.factor(data$remission))
+ctable_test <- confusionMatrix(predicted_test, as.factor(data$remission))
+ctable_train$table
+ctable_test$table
+ctable_train
+ctable_test
+
+#install.packages('rattle')
+library(rattle)
+library(RColorBrewer)
+png('arvore_cannabis.png')
+fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds"), tweak = 1)
+dev.off()
+
+```
 
 
-Aparentemente so resultados sao parecidos.
-
-Ver os tipos de variavel
-Ver os metodos adequados pra cada tipo 
-remission eh binomial - reg log vai ficar bom 
 
 https://towardsdatascience.com/do-you-know-how-to-choose-the-right-machine-learning-algorithm-among-7-different-types-295d0b0c7f60
 
 https://medium.com/datadriveninvestor/choosing-the-best-algorithm-for-your-classification-model-7c632c78f38f
 
+http://jmlr.csail.mit.edu/papers/v3/guyon03a.html
+
+https://towardsdatascience.com/implementing-and-interpreting-ordinal-logistic-regression-1ee699274cf5
+
+https://www.datacamp.com/community/tutorials/neural-network-models-r
+
+https://www.theanalysisfactor.com/logistic-regression-models-for-multinomial-and-ordinal-variables/
 
