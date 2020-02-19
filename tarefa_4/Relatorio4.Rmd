@@ -1,7 +1,7 @@
 ---
 title: "Tarefa 4 - Classificação"
 author: "Tais Bellini"
-date: "2/19/2020"
+date: "2/20/2020"
 output: pdf_document
 ---
 
@@ -107,29 +107,14 @@ predtest <- predict(ord_reg, newdata = test)
 predtrain
 cm <- confusionMatrix(table(predtrain, train$DID))
 cmtest <- confusionMatrix(table(predtest, test$DID))
-cm$table
-cm$byClass
-cmtest$table
-cmtest$byClass[,"Sensitivity"]
-cm$overall
-cmtest$overall
 
 sens_esp <- cbind(percent(cm$byClass[,"Sensitivity"]), percent(cmtest$byClass[,"Sensitivity"]), percent(cm$byClass[,"Specificity"]), percent(cmtest$byClass[,"Specificity"]))
 colnames(sens_esp) <- c("Sensibilidade Treino", "Sensibilidade Teste", "Especificidade Treino", "Especificidade Teste")
 sens_esp
 acc <- cbind(percent(cm$overall['Accuracy']), percent(cmtest$overall['Accuracy']))
-colnames(acc) <- c("Treino", "Teste")
 ```
 
-Na tabela 1, podemos observar a matriz de confusão resultante no conjunto de treino, sendo a linha o valor verdadeiro e a coluna o valor predito pelo modelo. Observa-se nas tabelas 2 e 3 que o resultado não foi satisfatório, sendo a acurácia no conjunto de treino `r percent(cm$overall['Accuracy'])` e no de teste `r percent(cmtest$overall['Accuracy'])`. Com este método e as variáveis disponíveis, não é adequado classificar qual médico atendeu o paciente.
-
-
-```{r, echo=FALSE}
-knitr::kable(cm$table, format = "latex", caption = "Matriz de confusão da Regressão Logísitica ordinal para DID", label = "cm_polr_did")
-knitr::kable(acc, format = "latex", caption = "Acurácia da Regressão Logística ordinal para DID")
-knitr::kable(sens_esp, format = "latex", caption = "Sensibilidade e Especificidade da Regressão Logística ordinal para DID")
-```
-
+Na tabela 1, podemos observar a matriz de confusão resultante no conjunto de treino, sendo a linha o valor verdadeiro e a coluna o valor predito pelo modelo. Observa-se na tabela 2 que o resultado não foi satisfatório, sendo a acurácia no conjunto de treino `r percent(cm$overall['Accuracy'])` e no de teste `r percent(cmtest$overall['Accuracy'])`. Com este método e as variáveis disponíveis, não é adequado classificar qual médico atendeu o paciente.
 
 Para a Tarefa 4, foi usada a abordagem de rede neural, através da função **neuralnet** do pacote de mesmo nome. Os parâmetros o número de neurônios escondidos (vértices) foi 2 e as variáveis utilizadas foram as numéricas.
 
@@ -159,21 +144,10 @@ pred <- ifelse(pred == 1, "A", ifelse(pred==2, "B", ifelse(pred == 3, "C", "D"))
 pred <- factor(pred, levels = c("A", "B", "C", "D"))
 cmrntest <- confusionMatrix(table(pred, test$DID))
 
-sens_esprn <- cbind(percent(cmrn$byClass[,"Sensitivity"]), percent(cmrntest$byClass[,"Sensitivity"]), percent(cmrn$byClass[,"Specificity"]), percent(cmrntest$byClass[,"Specificity"]))
-colnames(sens_esprn) <- c("Sensibilidade Treino", "Sensibilidade Teste", "Especificidade Treino", "Especificidade Teste")
-sens_esprn
-accrn <- cbind(percent(cmrn$overall['Accuracy']), percent(cmrntest$overall['Accuracy']))
-colnames(accrn) <- c("Treino", "Teste")
-
 ```
 
-```{r rn, echo=FALSE}
-knitr::kable(cmrn$table, format = "latex", caption = "Matriz de confusão da Rede Neural para DID", label = "cm_polr_did")
-knitr::kable(accrn, format = "latex", caption = "Acurácia da Rede Neural para DID")
-knitr::kable(sens_esprn, format = "latex", caption = "Sensibilidade e Especificidade da Rede Neural para DID")
-```
 
-As tabelas 4, 5 e 6 demonstram que os os resultados com redes neurais também não foram satisfatórios. A acurácia de treino e teste foi `r percent(cmrn$overall['Accuracy'])` e `r percent(cmrntest$overall['Accuracy'])`, respectivamente. Observa-se que a rede neural obteve piores resultados no conjunto de treino do que a regressão logística, mas melhores no conjunto de teste e que a classe B foi melhor predita pela rede neural.
+A tabela 2 demonstrm que os os resultados com redes neurais também não foram satisfatórios. A acurácia de treino e teste foi `r percent(cmrn$overall['Accuracy'])` e `r percent(cmrntest$overall['Accuracy'])`, respectivamente. Observa-se que a rede neural obteve piores resultados no conjunto de treino do que a regressão logística, mas melhores no conjunto de teste e que a classe B foi melhor predita pela rede neural.
 
 ```{r, include=FALSE}
 set.seed(205650)
@@ -196,20 +170,20 @@ cmdt <- confusionMatrix(predicted_train, train$DID)
 cmdttest <- confusionMatrix(predicted_test, test$DID)
 ```
 
-Vamos avaliar mais um método de classificação, a árvore de decisão. Para gerar a árvore de decisão, foi usada a função **rpart**. Novamente, observamos nas tabelas 7, 8 e 9 que o modelo não apresenta bons resultados, sendo a acurácia da predição no conjunto de treino `r percent(cmdt$overall['Accuracy'])` e no de teste `r percent(cmdttest$overall['Accuracy'])`. Neste caso, a acurácia no conjunto de treino é melhor do que no conjunto de teste, ao contrário da rede neural.
+Vamos avaliar mais um método de classificação, a árvore de decisão. Para gerar a árvore de decisão, foi usada a função **rpart**. Novamente, observamos na tabela 2 que o modelo não apresenta bons resultados, sendo a acurácia da predição no conjunto de treino `r percent(cmdt$overall['Accuracy'])` e no de teste `r percent(cmdttest$overall['Accuracy'])`. Neste caso, a acurácia no conjunto de treino é melhor do que no conjunto de teste, ao contrário da rede neural.
 
-```{r dt, echo=FALSE}
-sens_espdt <- cbind(percent(cmdt$byClass[,"Sensitivity"]), percent(cmdttest$byClass[,"Sensitivity"]), percent(cmdt$byClass[,"Specificity"]), percent(cmdttest$byClass[,"Specificity"]))
-colnames(sens_espdt) <- c("Sensibilidade Treino", "Sensibilidade Teste", "Especificidade Treino", "Especificidade Teste")
-sens_espdt
-accdt <- cbind(percent(cmdt$overall['Accuracy']), percent(cmdttest$overall['Accuracy']))
-colnames(accdt) <- c("Treino", "Teste")
-knitr::kable(cmdt$table, format = "latex", caption = "Matriz de confusão da árvore de decisão para DID")
 
-knitr::kable(accdt, format = "latex", caption = "Acurácia da árvore de decisão para DID")
-
-knitr::kable(sens_espdt, format = "latex", caption = "Sensibilidade e Especificidade da árvore de decisão para DID")
-
+```{r, echo=FALSE}
+accdid <- data.frame("Acurácia Treino" = c(percent(cm$overall['Accuracy']),
+                                           percent(cmrn$overall['Accuracy']),
+                                           percent(cmdt$overall['Accuracy'])),
+                     "Acurácia Teste" = c(percent(cmtest$overall['Accuracy']),
+                                          percent(cmrntest$overall['Accuracy']),
+                                          percent(cmdttest$overall['Accuracy'])), 
+                     row.names= c("Regressão Logística Ordinal", "Rede Neural", "Árvore de decisão"))
+                                           
+knitr::kable(cm$table, format = "latex", caption = "Matriz de confusão para DID no conjunto treino")
+knitr::kable(accdid, format = "latex", caption = "Acurácia para DID")
 ```
 
 
@@ -223,11 +197,10 @@ fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds",
 
 Para a identificação se o paciente está em remissão, considerando os métodos vistos até a Tarefa 3 do curso, a regressão logística se mostrou adequada, pois **remission** é uma variável dicotômica e este algoritmo funciona bem para este tipo de classificação. Além disso, é possível utilizar tanto as variáveis categóricas quanto numéricas.
 
-## Resultados Regressão Logística binomial
 
 A função **glm** do pacote **MASS** foi utilizada para estimar o modelo de regressão logística binomial. Após a execução do modelo quase completo (*lungcapacity* foi retirado pois o modelo não convergiu com todas as variáveis), foi aplicada a função **stepAIC**, que faz a seleção de variáveis através do *stepwise* (foi escolhido o método *backard*) tendo como critério o AIC. 
 
-```{r}
+```{r, include=FALSE}
 set.seed(205650)
 indexes <- createDataPartition(data$remission, p = 0.85, list = FALSE)
 train = data[indexes, ]
@@ -237,37 +210,30 @@ fullMod <- glm(remission ~ DID + pain + Sex + SmokingHx + FamilyHx + Married + n
 summary(fullMod)
 stepMod <- stepAIC(fullMod, direction = "backward")
 stepMod$anova
+summary(stepMod)
 ```
 
-O modelo final, após o *stepwise backard*, contém as seguintes variáveis:  **SmokingHx, FamilyHx, mobility, tumorsize e IL6**. As variáveis consideradas significativas (p-valor < 0.05) foram: **SmokingHx, mobility, tumorsize, DID, Sex, Married**.
+O modelo final, após o *stepwise backard*, contém as seguintes variáveis:  **SmokingHx, FamilyHx, mobility, tumorsize e IL6**. As variáveis consideradas significativas (p-valor < 0.01) foram: **SmokingHx, mobility, tumorsize**.
 
 
-Os resultados obtidos foram:
-
-Treino: 82,37% de acuracia, 75,71% de sensibilidade e 89,74% de especificidade.
-Teste: 83,33% de acuracia, 100% sensibilidade, 66,67% de especificidade.
-```{r}
+```{r, include = FALSE}
 predStepTrain <- ifelse(predict(stepMod, newdata = train) >= 0.5, 1, 0)
-cm <- confusionMatrix(table(predStepTrain, train$remission), positive = "1")
-cm$byClass
-
-kable(cm$byClass)
-```
-
-```{r}
+cmrem <- confusionMatrix(table(predStepTrain, train$remission), positive = "1")
 predStepTest <- ifelse(predict(stepMod, newdata = test) >= 0.5, 1, 0)
-cm <- confusionMatrix(table(predStepTest, test$remission), positive = "1")
-cm
+cmremtest <- confusionMatrix(table(predStepTest, test$remission), positive = "1")
+
 ```
 
-Portanto, conclui-se que sim, pode-se identificar se o paciente está em remissão com aproximadamente 80% de acurácia. Apesar de uma acurácia relativamente boa, não considera-se um bom modelo, pois, neste caso, a especificidade tem grande importância (queremos identificar corretamente quem não está em remissão para definir um novo tratamento) e obteve um resultado pouco satisfatório.
+
+Os resultados obtidos podem ser observados na tabela 3. Observa-se que a acurácia foi de `r percent(cmrem$overall['Accuracy'])` e `r percent(cmremtest$overall['Accuracy'])` para treino e teste, respectivamente. 
+
+Portanto, conclui-se que sim, pode-se identificar se o paciente está em remissão com aproximadamente 80% de acurácia. Apesar de uma acurácia relativamente boa, não considera-se um bom modelo, pois, neste caso, a especificidade tem grande importância (queremos identificar corretamente quem não está em remissão para definir um novo tratamento) e obteve um resultado pouco satisfatório de `r percent(cmrem$byClass['Specificity'])`.
 
 
-Considerando os métodos apresentados para a Tarefa 4, utilizaremos SVM, que também é um bom algoritmo para classificação de variáveis dicotômicas. 
-Contudo, ele é adequado para variáveis numéricas, portanto, utilizaremos apenas estas variáveis na análise. 
+Considerando os métodos apresentados para a Tarefa 4, utilizaremos SVM, que também é um bom algoritmo para classificação de variáveis dicotômicas. Contudo, ele é adequado para variáveis numéricas, portanto, utilizaremos apenas estas variáveis na análise. 
 
-SVM para as variáveis numéricas:
-```{r}
+
+```{r, include=FALSE}
 dataSVM <- na.omit(dataCont)
 dataSVM <- cbind(remission = data[,"remission"], dataSVM)
 head(dataSVM)
@@ -298,14 +264,18 @@ dataSVM[svmfit$index,]
 #formula
 
 # matrix de confus?o:
-confusionMatrix(table(predict(svmfit), train$remission), positive="1")
+
+cmsvm <- confusionMatrix(table(predict(svmfit, train), train$remission), positive="1")
+cmsvmtest <- confusionMatrix(table(predict(svmfit, test), test$remission), positive="1")
+
 ```
 
-SVM ficou com 89,87% de acuracia, 92,50% de sensibilidade e 87,18% de especificidade.
 
-Para visualizar, vamos escolher as duas variáveis consideradas mais importantes pelo modelo: 
+Observamos pelos resultados da tabela 3 que SVM teve uma acurácia de `r percent(cmsvm$overall['Accuracy'])` e `r percent(cmsvmtest$overall['Accuracy'])` em treino e teste, respectivamente. Além disso, a especificidade foi `r percent(cmsvm$overall['Accuracy'])` e `r percent(cmsvmtest$overall['Accuracy'])`.
 
-```{r}
+Para visualizar, vamos escolher as duas variáveis consideradas mais importantes pelo modelo: **lungcapacity** e **Age**. A figura 3 ilustra os *support vectors* com um **X**.
+
+```{r, include=FALSE}
 w <- t(svmfit$coefs) %*% svmfit$SV                 # weight vectors
 w
 w <- apply(w, 2, function(v){sqrt(sum(v^2))})    # weight
@@ -314,19 +284,23 @@ w
 
 ```
 
-```{r}
+```{r, include=FALSE}
 svmfit2 = svm(remission ~ lungcapacity + Age, data = train, kernel ="linear", cost = 10, scale = FALSE )
 head(train)
 summary(svmfit2)
 dat = data.frame(lungcapacity = train$lungcapacity, Age = train$Age,  remission = as.factor( train$remission ))
 dat
 # limites de decis?o:
+
+```
+
+```{r, fig.cap="Plot do SVM para remissão", echo=FALSE, out.width="65%", fig.align="center"}
 plot(svmfit2, dat, grid = 100, svSymbol = "X", dataSymbol = 19)
 ```
 
-O SVM apresentou resultados satisfatórios, porém, foram utilizadas apenas a variáveis contínuas. Dessa forma, vamos avaliar o desfecho remissão com Árvore de Decisão:
+O SVM apresentou resultados bem satisfatórios, porém, foram utilizadas apenas a variáveis contínuas. 
 
-```{r}
+```{r, include = FALSE}
 set.seed(205650)
 indexes <- createDataPartition(data$remission, p = 0.85, list = FALSE)
 train = data[indexes, ]
@@ -349,27 +323,36 @@ ctable_test$table
 ctable_train
 ctable_test
 
-fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds"), tweak = 1)
-dev.off()
-
 ```
 
-Observamos uma acurácia de 91% no treino e 100% no teste. São resultados muito satisfatórios, porém é importante ressaltar que o banco possui 91 observações, ou seja, apenas 12 observações foram utilizadas para o teste.
+
+```{r, echo=FALSE}
+accdid <- data.frame("Acurácia Treino" = c(percent(cmrem$overall['Accuracy']),
+                                           percent(cmsvm$overall['Accuracy']),
+                                           percent(ctable_train$overall['Accuracy'])),
+                     "Acurácia Teste" = c(percent(cmrem$overall['Accuracy']),
+                                          percent(cmsvmtest$overall['Accuracy']),
+                                          percent(ctable_test$overall['Accuracy'])), 
+                     row.names= c("Regressão Logística binomial", "SVM", "Árvore de decisão"))
+                                           
+knitr::kable(accdid, format = "latex", caption = "Acurácia para remissão")
+```
+
+
+```{r, fig.cap="Plot da árvore de decisão para remissão", echo=FALSE, out.width="65%", fig.align="center"}
+fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds"), tweak = 1)
+```
+
+
+Por fim, avaliando o desfecho remissão com Árvore de Decisão,  observamos uma acurácia de `r percent(ctable_train$overall['Accuracy'])` (treino) e `r percent(ctable_test$overall['Accuracy'])` (teste), como apresentado na tabela 3. A especificidade foi de `r percent(ctable_train$byClass['Specificity'])` (treino) e `r percent(ctable_test$byClass['Specificity'])` (teste). São resultados muito satisfatórios, porém é importante ressaltar que o banco possui 91 observações, ou seja, apenas 12 observações foram utilizadas para o teste.
+
 
 # Avaliação da identificação se o paciente é fumante
 
-Regressao logistica ordinal
-```{r}
-head(data)
-ggplot(data, aes(x = SmokingHx, y = lungcapacity, fill = SmokingHx)) +   geom_boxplot(size = .75) +   facet_grid(Sex ~ DID, margins = FALSE) +   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
-```
+Para a classificação do paciente de acordo com o hábito de fumar, utilizamos regressão logística ordinal e árvore de decisão, assim como para a identificação do médico que atendeu o paciente.
 
-```{r}
-head(data)
-ggplot(data, aes(x = SmokingHx, y = tumorsize, fill = SmokingHx)) +   geom_boxplot(size = .75) +   facet_grid(Sex ~ DID, margins = FALSE) +   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
-```
 
-```{r}
+```{r, include = FALSE}
 head(data)
 str(data)
 set.seed(205650)
@@ -386,33 +369,18 @@ summary_table <- cbind(summary_table, "p value" = round(pval,3))
 summary_table
 ```
 
-vars com p-value < 0.05: tumorsize, lungcapacity
-
-```{r}
-ord_reg_sg <- polr(SmokingHx~tumorsize+lungcapacity, data = train, Hess = TRUE)
-summary(ord_reg_sg)
-summary_table <- coef(summary(ord_reg_sg))
-pval <- pnorm(abs(summary_table[, "t value"]),lower.tail = FALSE)* 2
-summary_table <- cbind(summary_table, "p value" = round(pval,3))
-summary_table
-```
-Comparando:
-```{r}
-predsig<- predict(ord_reg_sg, newdata = train)
+```{r, include=FALSE}
 pred <- predict(ord_reg, newdata = train)
-confusionMatrix(table(predsig, train$SmokingHx))
-confusionMatrix(table(pred, train$SmokingHx))
-```
-
-```{r}
+cmsmoke <- confusionMatrix(table(pred, train$SmokingHx))
 predtest <- predict(ord_reg, newdata = test)
-confusionMatrix(table(predtest, test$SmokingHx))
+cmtestsmoke <- confusionMatrix(table(predtest, test$SmokingHx))
 ```
 
 
-Árvore:
+Observa-se na tabela 4 que a acurácia do modelo foi alta, `r percent(cmsmoke$overall["Accuracy"])`. Ainda, tivemos bons resultados para especificidade e sensibilidade, como demonstrado nas tabelas 5, 6, 7 e 8.
 
-```{r}
+
+```{r, include = FALSE}
 set.seed(205650)
 indexes <- createDataPartition(data$SmokingHx, p = 0.85, list = FALSE)
 train = data[indexes, ]
@@ -427,55 +395,86 @@ model_fit$variable.importance
 printcp(model_fit)
 
 #Matriz de confusao
-ctable_train <- confusionMatrix(predicted_train, as.factor(train$SmokingHx))
-ctable_test <- confusionMatrix(predicted_test, as.factor(test$SmokingHx))
-ctable_train$table
-ctable_test$table
-ctable_train
-ctable_test
-
-fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds", "Greens"), tweak = 1)
-dev.off()
+ctable_trainsmoke <- confusionMatrix(predicted_train, as.factor(train$SmokingHx))
+ctable_testsmoke <- confusionMatrix(predicted_test, as.factor(test$SmokingHx))
 
 ```
 
 
+```{r fig.cap="Plot da árvore de decisão para hábito de fumar", echo=FALSE, out.width="65%", fig.align="center"}
+fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds", "Greens"), tweak = 1)
+```
 
-## Remissao + vars definidas
-Utilize um modelo apropriado para analisar a relação entre o desfecho remissão e as variáveis sexo,
-histórico familiar, estado civil e DID.
 
-tarefa 3 - Reg logistica
-tarefa 4 - tree
+```{r, echo=FALSE}
+accdid <- data.frame("Acurácia Treino" = c(percent(cmsmoke$overall['Accuracy']),
+                                           percent(ctable_trainsmoke$overall['Accuracy'])),
+                     "Acurácia Teste" = c(percent(cmtestsmoke$overall['Accuracy']),
+                                          percent(ctable_testsmoke$overall['Accuracy'])),
+                     row.names= c("Regressão Logística ordinal", "Árvore de decisão"))
+                                           
+knitr::kable(accdid, format = "latex", caption = "Acurácia para hábito de fumar")
+knitr::kable(percent(cmsmoke$byClass[,"Specificity"]), format = "latex", caption = "Especificidade para hábito de fumar conjunto de treino", col.names = c("Especificidade"))
+knitr::kable(percent(cmsmoke$byClass[,"Sensitivity"]), format = "latex", caption = "Sensibilidade para hábito de fumar conjunto de treino", col.names = c("Sensibilidade"))
+knitr::kable(percent(cmtestsmoke$byClass[,"Specificity"]), format = "latex", caption = "Especificidade para hábito de fumar conjunto de teste", col.names = c("Especificidade"))
+knitr::kable(percent(cmtestsmoke$byClass[,"Sensitivity"]), format = "latex", caption = "Sensibilidade para hábito de fumar conjunto de teste", col.names = c("Sensibilidade"))
 
-```{r}
+```
+
+Avaliando a aplicação da árvore de decisão para classificar os pacientes pelo hábito de fumar, também obtivemos ótimos resultados, como visto na tabela 4.
+
+Utilizamos regressão logística e árvore de decisão, entre outros, para buscar classificar as três variáveis até agora: médico que atendeu o paciente, se o paciente está em remissão e se o paciente é fumante. Para a primeira variável, os resultados foram muito insatisfatórios nas métricas de interesse (acurácia e especificidade) independente do método. Por outro lado, estes mesmos métodos apresentaram bons resultados para as outras duas variáveis, o que nos leva a avaliar que as informações deste banco de dados não são relevantes para determinar o médico que atendeu o paciente. 
+
+# Relação entre remissão e variáveis sexo, histórico, estado civil e DID
+
+Para avaliar a relação entre as variáveis sexo, histórico familiar, estado civil e DID com remissão vamos utilizar uma regressão logística binomial, avaliando o *odds ratio* e uma árvore de decisão, avaliando a importância das variáveis e as escolhidas pelo modelo. 
+
+
+```{r, include = FALSE}
+fullMod <- glm(remission~Sex+FamilyHx+Married+DID, data = data, family = "binomial")
+summary(fullMod)
+
+stepMod <- stepAIC(fullMod, direction = "backward")
+
+oddsRatio <- round(exp(coef(stepMod)),2)
+oddsRatio
+```
+
+Aplicando a regressão logística com **remissão** como variável dependente e **Sex, FamilyHx, Married, DID**, observamos que as variáveis **Sex** e **DID** são significativas (p-valor <0.01). O modelo final utilizando o método *stepwise backward* para seleção de variáveis utiliza apenas estas duas variáveis. A tabela 9 demonstra que ser do sexo feminino reduz em 69% a chance de se estar em remissão em oposição a ser do sexo masculino. Similarmente, ser atendido pelo médico de *id* **D** reduz em 81% esta chance, quando comparado com ser atendido pelo médico de *id* **A**.
+
+
+```{r include=FALSE}
 model_fit <- rpart(remission~Sex+FamilyHx+Married+DID, data = data, method = "class", control = list(minsplit = 20))
-predicted_train <- predict(model_fit, newdata = data, "class")
-predicted_test <- predict(model_fit, newdata = data, "class")
+
+predicted <- predict(model_fit, newdata = data, "class")
+
 summary(model_fit)
+
 # importancia das vars
 model_fit$variable.importance
 #vars que foram usadas na arvore
 printcp(model_fit)
 
 #Matriz de confusao
-ctable_train <- confusionMatrix(predicted_train, as.factor(data$remission))
-ctable_test <- confusionMatrix(predicted_test, as.factor(data$remission))
-ctable_train$table
-ctable_test$table
-ctable_train
-ctable_test
-
-#install.packages('rattle')
-library(rattle)
-library(RColorBrewer)
-png('arvore_cannabis.png')
-fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds"), tweak = 1)
-dev.off()
+ctable_train <- confusionMatrix(predicted, as.factor(data$remission))
 
 ```
 
+```{r, echo = FALSE}
+knitr::kable(oddsRatio, format = "latex", caption = "Odds ratio da regressão logística", col.names = c("Odds Ratio"))
+knitr::kable(model_fit$variable.importance, format = "latex", caption = "Importância das variáveis árvore de decisão", col.names = c("Importância das variáveis"))
+```
 
+Similarmente à regressão logística, observa-se na tabela 10 que **DID** é a variável com mais importância quando utilizamos árvore de decisão, seguida de **Sex**. Poedmos ver pela figura 6 que foram estas variáveis as escolhidas para a construção da árvore.
+
+Assim, através de dois métodos, podemos sugerir que Gênero e a escolha do médico podem influenciar no desfecho da remissão de câncer.
+
+```{r fig.cap="Plot da árvore de decisão para remissão", echo=FALSE, out.width="65%", fig.align="center"}
+fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds"), tweak = 1)
+```
+
+
+# Referências
 
 https://towardsdatascience.com/do-you-know-how-to-choose-the-right-machine-learning-algorithm-among-7-different-types-295d0b0c7f60
 
