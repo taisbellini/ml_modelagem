@@ -1,10 +1,12 @@
 ---
 title: "Tarefa 4 - Classificação"
-output: word_document
+author: "Tais Bellini"
+date: "2/19/2020"
+output: pdf_document
 ---
 
 
-```{r, include=FALSE}
+```{r setup, include=FALSE}
 #install.packages("caret")
 #install.packages("tidyverse")
 #install.packages('rattle')
@@ -18,6 +20,8 @@ library(rattle)
 library(RColorBrewer)
 library(knitr)
 library(neuralnet)
+library(scales)
+library(ggplot2)
 
 ```
 
@@ -27,14 +31,16 @@ library(neuralnet)
 Para este estudo, temos um banco de dados que possui variáveis categóricas e numéricas com informações sobre pacientes com câncer. Algumas variáveis categóricas não estavam definidas como fatores, assim como algumas das numéricas estavam classificadas em categorias. Portanto, se fez um ajuste inicial de forma que variáveis categóricas fossem reconhecidas como fatores e as numéricas como números, utilizando as funções **as.factor()** e **as.numeric()**.
 
 As variáveis categóricas são:
+
 * Paciente em remissão (**remission**): Níveis são 1 e 2, consideramos 1 = "Sim" e 2 = "Não" e recodificamos para 1 e 0, respectivamente;
 * Paciente é casado (**Married**): Níveis são 0 e 1, consideramos 0 = "Não" e 1 = "Sim";
 * Paciente possui histórico familiar de câncer (**FamilyHx**): Níveis são 0 e 1, consideramos 0= "Não" e 1 = "Sim";
 * Paciente é fumante (**SmokingHx**): Níveis são "never", "former", "current";
 * Sexo (**Sex**): Níveis são 1 e 2, consideramos 1 = "Homem", 2 = "Mulher";
-* Médico que atendeu o paciente(**DID**): Níveis são "A", "B", "C", "D".
+* Médico que atendeu o paciente (**DID**): Níveis são "A", "B", "C", "D".
 
-As variáveis numéricas são: 
+As variáveis numéricas são:
+
 * Tamanho do tumor (**tumorsize**): Contínua;
 * Percentual de níveis de co2 (**co2**): Contínua;
 * Escala de dor (**pain**): Inteiro de 0 a 10; 
@@ -66,31 +72,29 @@ data$remission <- as.factor(data$remission)
 data$Married <- as.factor(data$Married)
 ```
 
-Vamos avaliar alguns métodos de classificação para identificar o médico que atendeu o paciente, se o paciente está em remissão ou não e se o paciente tem ou teve o hábito de fumar. Além disso, vamos buscar determinar se o paciente está em remissão ou não a partir das variáveis sexo, histórico familiar, estado civil (casado ou não) e médico que atendeu.
+Vamos avaliar alguns métodos de classificação para identificar: o médico que atendeu o paciente, se o paciente está em remissão ou não e se o paciente tem ou teve o hábito de fumar. Além disso, vamos buscar determinar se o paciente está em remissão ou não a partir das variáveis *sexo, histórico familiar, estado civil (casado ou não) e médico que atendeu*.
 
-Para todas as análises, a amostra foi dividida nos conjuntos de treino e teste através da função **createDatapartition** do pacote **caret** e com semente **205650**.
+Para todas as análises, a amostra foi dividida nos conjuntos de treino (85%) e teste (15%) através da função **createDatapartition** do pacote **caret** e com semente **205650**.
 
 
-```{r}
+```{r,include=FALSE}
 dataCont <- data[,c("tumorsize", "co2", "lungcapacity", "Age", "WBC", "RBC", "IL6")]
 ```
 
 
 # Avaliação da identificação do médico (DID)
 
-Para avaliar se é possível identificar o médico que atendeu o paciente, considerando os algoritmos vistos até a Terefa 3, vamos utilizar a regressão logística ordinal. Para tal, será usado o pacote **MASS** e a função **polr**. Separamos o dataset em treino (85%) e teste (15%).
+Para avaliar se é possível identificar o médico que atendeu o paciente, considerando os algoritmos vistos até a Terefa 3, vamos utilizar a regressão logística ordinal. Para tal, será usado o pacote **MASS** e a função **polr**.
 
-```{r}
+```{r, include=FALSE}
 set.seed(205650)
-indexes <- createDataPartition(data$DID, p = 0.90, list = FALSE)
+indexes <- createDataPartition(data$DID, p = 0.85, list = FALSE)
 train = data[indexes, ]
 test = data[-indexes, ]
 ```
 
 
-```{r}
-head(data)
-str(data)
+```{r, include=FALSE}
 ord_reg <- polr(DID~., data = train, Hess = TRUE)
 summary(ord_reg)
 
@@ -98,11 +102,6 @@ summary_table <- coef(summary(ord_reg))
 pval <- pnorm(abs(summary_table[, "t value"]),lower.tail = FALSE)* 2
 summary_table <- cbind(summary_table, "p value" = round(pval,3))
 summary_table
-```
-
-Resultados: 
-
-```{r}
 predtrain <- predict(ord_reg, newdata = train)
 predtest <- predict(ord_reg, newdata = test)
 predtrain
@@ -111,48 +110,72 @@ cmtest <- confusionMatrix(table(predtest, test$DID))
 cm$table
 cm$byClass
 cmtest$table
-cmtest$byClass
+cmtest$byClass[,"Sensitivity"]
 cm$overall
 cmtest$overall
+
+sens_esp <- cbind(percent(cm$byClass[,"Sensitivity"]), percent(cmtest$byClass[,"Sensitivity"]), percent(cm$byClass[,"Specificity"]), percent(cmtest$byClass[,"Specificity"]))
+colnames(sens_esp) <- c("Sensibilidade Treino", "Sensibilidade Teste", "Especificidade Treino", "Especificidade Teste")
+sens_esp
+acc <- cbind(percent(cm$overall['Accuracy']), percent(cmtest$overall['Accuracy']))
+colnames(acc) <- c("Treino", "Teste")
+```
+
+Na tabela 1, podemos observar a matriz de confusão resultante no conjunto de treino, sendo a linha o valor verdadeiro e a coluna o valor predito pelo modelo. Observa-se nas tabelas 2 e 3 que o resultado não foi satisfatório, sendo a acurácia no conjunto de treino `r percent(cm$overall['Accuracy'])` e no de teste `r percent(cmtest$overall['Accuracy'])`. Com este método e as variáveis disponíveis, não é adequado classificar qual médico atendeu o paciente.
+
+
+```{r, echo=FALSE}
+knitr::kable(cm$table, format = "latex", caption = "Matriz de confusão da Regressão Logísitica ordinal para DID", label = "cm_polr_did")
+knitr::kable(acc, format = "latex", caption = "Acurácia da Regressão Logística ordinal para DID")
+knitr::kable(sens_esp, format = "latex", caption = "Sensibilidade e Especificidade da Regressão Logística ordinal para DID")
 ```
 
 
-A acurácia e sensibilidade obtiveram valores muito baixos, sendo a maioria menos de 50%, como observado na Tabela 1. Com este método e as variáveis disponíveis, não é adequado classificar qual médico atendeu o paciente.
+Para a Tarefa 4, foi usada a abordagem de rede neural, através da função **neuralnet** do pacote de mesmo nome. Os parâmetros o número de neurônios escondidos (vértices) foi 2 e as variáveis utilizadas foram as numéricas.
 
-para a tarefa 4, foi usada a abordagem de rede neural, através da função **neuralnet** do pacote de mesmo nome. Os parâmetros o número de neurônios escondidos (vértices) foi 2.
-
-```{r}
+```{r, include=FALSE}
 # fit neural network
-nn=neuralnet(DID~tumorsize + co2 + lungcapacity + Age + WBC + RBC + IL6,data=train, hidden=2, act.fct = "logistic",
-                linear.output = FALSE)
-nnplot <- plot(nn)
+nn=neuralnet(DID~tumorsize + co2 + lungcapacity + Age + WBC + RBC + IL6,data=train, hidden=2, act.fct = "logistic", linear.output = FALSE)
 ```
 
-Treino:
-```{r}
+```{r, fig.cap="Plot da rede neural para DID", echo=FALSE, out.width="65%", fig.align="center"}
+plot(nn, rep = "best")
+```
+
+```{r, include=FALSE}
+#Treino
 Predict=compute(nn,train)
 prob <- Predict$net.result
 pred <-  max.col(prob, 'first')
 pred <- ifelse(pred == 1, "A", ifelse(pred==2, "B", ifelse(pred == 3, "C", "D")))
 pred <- factor(pred, levels = c("A", "B", "C", "D"))
-confusionMatrix(table(pred, train$DID))
-```
+cmrn <- confusionMatrix(table(pred, train$DID))
 
-Teste:
-```{r}
+#Teste
 Predict=compute(nn,test)
 prob <- Predict$net.result
 pred <-  max.col(prob, 'first')
 pred <- ifelse(pred == 1, "A", ifelse(pred==2, "B", ifelse(pred == 3, "C", "D")))
 pred <- factor(pred, levels = c("A", "B", "C", "D"))
-confusionMatrix(table(pred, test$DID))
+cmrntest <- confusionMatrix(table(pred, test$DID))
+
+sens_esprn <- cbind(percent(cmrn$byClass[,"Sensitivity"]), percent(cmrntest$byClass[,"Sensitivity"]), percent(cmrn$byClass[,"Specificity"]), percent(cmrntest$byClass[,"Specificity"]))
+colnames(sens_esprn) <- c("Sensibilidade Treino", "Sensibilidade Teste", "Especificidade Treino", "Especificidade Teste")
+sens_esprn
+accrn <- cbind(percent(cmrn$overall['Accuracy']), percent(cmrntest$overall['Accuracy']))
+colnames(accrn) <- c("Treino", "Teste")
+
 ```
 
-Os resultados com redes neurais também não foram satisfatórios.
+```{r rn, echo=FALSE}
+knitr::kable(cmrn$table, format = "latex", caption = "Matriz de confusão da Rede Neural para DID", label = "cm_polr_did")
+knitr::kable(accrn, format = "latex", caption = "Acurácia da Rede Neural para DID")
+knitr::kable(sens_esprn, format = "latex", caption = "Sensibilidade e Especificidade da Rede Neural para DID")
+```
 
-Vamos fazer uma tentativa com árvore de decisão:
+As tabelas 4, 5 e 6 demonstram que os os resultados com redes neurais também não foram satisfatórios. A acurácia de treino e teste foi `r percent(cmrn$overall['Accuracy'])` e `r percent(cmrntest$overall['Accuracy'])`, respectivamente. Observa-se que a rede neural obteve piores resultados no conjunto de treino do que a regressão logística, mas melhores no conjunto de teste e que a classe B foi melhor predita pela rede neural.
 
-```{r}
+```{r, include=FALSE}
 set.seed(205650)
 indexes <- createDataPartition(data$DID, p = 0.85, list = FALSE)
 train = data[indexes, ]
@@ -168,18 +191,32 @@ model_fit$variable.importance
 printcp(model_fit)
 
 #Matriz de confusao
-ctable_train <- confusionMatrix(predicted_train, train$DID)
-ctable_test <- confusionMatrix(predicted_test, test$DID)
-ctable_train$table
-ctable_test$table
-ctable_train
-ctable_test
 
-fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds", "Greens", "Purples"), tweak = 1)
-dev.off()
+cmdt <- confusionMatrix(predicted_train, train$DID)
+cmdttest <- confusionMatrix(predicted_test, test$DID)
 ```
 
-Mesmo com árvore de decisão, não foi possível obter resultados satisfatórios. 
+Vamos avaliar mais um método de classificação, a árvore de decisão. Para gerar a árvore de decisão, foi usada a função **rpart**. Novamente, observamos nas tabelas 7, 8 e 9 que o modelo não apresenta bons resultados, sendo a acurácia da predição no conjunto de treino `r percent(cmdt$overall['Accuracy'])` e no de teste `r percent(cmdttest$overall['Accuracy'])`. Neste caso, a acurácia no conjunto de treino é melhor do que no conjunto de teste, ao contrário da rede neural.
+
+```{r dt, echo=FALSE}
+sens_espdt <- cbind(percent(cmdt$byClass[,"Sensitivity"]), percent(cmdttest$byClass[,"Sensitivity"]), percent(cmdt$byClass[,"Specificity"]), percent(cmdttest$byClass[,"Specificity"]))
+colnames(sens_espdt) <- c("Sensibilidade Treino", "Sensibilidade Teste", "Especificidade Treino", "Especificidade Teste")
+sens_espdt
+accdt <- cbind(percent(cmdt$overall['Accuracy']), percent(cmdttest$overall['Accuracy']))
+colnames(accdt) <- c("Treino", "Teste")
+knitr::kable(cmdt$table, format = "latex", caption = "Matriz de confusão da árvore de decisão para DID")
+
+knitr::kable(accdt, format = "latex", caption = "Acurácia da árvore de decisão para DID")
+
+knitr::kable(sens_espdt, format = "latex", caption = "Sensibilidade e Especificidade da árvore de decisão para DID")
+
+```
+
+
+```{r, fig.cap="árvore gerada para DID", out.width="65%", fig.align="center", echo=FALSE}
+fancyRpartPlot(model_fit, yesno = 2, caption = NULL, palettes=c("Blues", "Reds", "Greens", "Purples"), tweak = 1)
+```
+
 
 
 # Avaliação da identificação se o paciente está em remissão
